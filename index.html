@@ -1,0 +1,1282 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Network Fix Review</title>
+<meta name="description" content="A working prototype: AI recommendations for network operations that an operator can question, correct and teach. Self-initiated concept by Elizabeth Hannan.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Familjen+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: an operator's review desk. Queue of AI recommendations on the left, the open recommendation on the right; two more views show what the model learns and the telemetry spec. */
+:root {
+  --bg: #f3f5f4;
+  --surface: #ffffff;
+  --surface-2: #eaefed;
+  --ink: #121a24;
+  --ink-2: #44515c;
+  --ink-3: #5f6c76;
+  --line: #d3dbdd;
+  --accent: #0b6b66;
+  --accent-ink: #ffffff;
+  --accent-soft: #dcefec;
+  --ai: #5b47b8;
+  --ai-soft: #eeebfb;
+  --good: #1c7a43;
+  --good-soft: #e1f2e7;
+  --warn: #a14d18;
+  --warn-soft: #f8e9df;
+  --crit: #b42a22;
+  --crit-soft: #f9e3e1;
+  --s1: #2a78d6;
+  --s2: #1baf7a;
+  --s3: #eb6834;
+  --focus: #2a78d6;
+  --font-display: "Familjen Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --radius: 10px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1518; --surface: #141e22; --surface-2: #1b272c; --ink: #e7edeb; --ink-2: #b6c2c4; --ink-3: #93a1a5;
+    --line: #2a3a40; --accent: #3fb3a8; --accent-ink: #06201e; --accent-soft: #15322f; --ai: #a797ff; --ai-soft: #241f3f;
+    --good: #52c482; --good-soft: #15301f; --warn: #ef8c4e; --warn-soft: #36210f; --crit: #ff7b72; --crit-soft: #3a1714;
+    --s1: #3987e5; --s2: #199e70; --s3: #d95926; --focus: #6aa8f0; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1518; --surface: #141e22; --surface-2: #1b272c; --ink: #e7edeb; --ink-2: #b6c2c4; --ink-3: #93a1a5;
+  --line: #2a3a40; --accent: #3fb3a8; --accent-ink: #06201e; --accent-soft: #15322f; --ai: #a797ff; --ai-soft: #241f3f;
+  --good: #52c482; --good-soft: #15301f; --warn: #ef8c4e; --warn-soft: #36210f; --crit: #ff7b72; --crit-soft: #3a1714;
+  --s1: #3987e5; --s2: #199e70; --s3: #d95926; --focus: #6aa8f0; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 16px; line-height: 1.5;
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 6px; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; line-height: 1.2; }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.wrap { max-width: 1440px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+
+/* Header */
+.top { border-bottom: 1px solid var(--line); background: var(--surface); }
+.top .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; padding-block: 16px; }
+.brand { display: grid; gap: 2px; min-width: 0; }
+.brand h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.01em; }
+.brand p { margin: 0; color: var(--ink-2); }
+.tags { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
+.tag { font-size: 0.8125rem; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); color: var(--ink-2); background: var(--surface-2); }
+nav.tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+nav.tabs .wrap { display: flex; gap: 4px; padding-block: 0; }
+.tab { border: 0; background: none; padding: 12px 14px; cursor: pointer; color: var(--ink-2); border-bottom: 3px solid transparent; font-weight: 700; }
+.tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+.tab:hover { color: var(--ink); }
+.tabbar { background: var(--surface); border-bottom: 1px solid var(--line); }
+
+main { padding-block: 20px 48px; }
+.view[hidden] { display: none !important; }
+
+/* Review view */
+.review { display: grid; grid-template-columns: minmax(260px, 340px) minmax(0, 1fr); gap: 20px; align-items: start; }
+.queue { display: grid; gap: 10px; }
+.queue-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.queue-head h2 { font-size: 1.0625rem; }
+.queue-head span { color: var(--ink-3); font-size: 0.875rem; }
+.qitem {
+  display: grid; gap: 6px; text-align: left; width: 100%; cursor: pointer;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px;
+}
+.qitem:hover { border-color: var(--ink-3); }
+.qitem[aria-current="true"] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.qitem .row1 { display: flex; justify-content: space-between; gap: 8px; font-size: 0.8125rem; color: var(--ink-3); }
+.qitem .ttl { font-weight: 700; line-height: 1.35; }
+.qitem .row3 { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+
+.pill { display: inline-flex; align-items: center; gap: 5px; font-size: 0.8125rem; padding: 2px 9px; border-radius: 999px; border: 1px solid transparent; white-space: nowrap; }
+.pill svg { width: 12px; height: 12px; flex: none; }
+.p-new { background: var(--surface-2); color: var(--ink-2); border-color: var(--line); }
+.p-acc { background: var(--good-soft); color: var(--good); }
+.p-edit { background: var(--accent-soft); color: var(--accent); }
+.p-rej { background: var(--crit-soft); color: var(--crit); }
+.p-wait { background: var(--ai-soft); color: var(--ai); }
+.risk-Low { background: var(--surface-2); color: var(--ink-2); }
+.risk-Medium { background: var(--warn-soft); color: var(--warn); }
+.risk-High { background: var(--crit-soft); color: var(--crit); }
+
+.conf { display: grid; grid-template-columns: 64px auto; align-items: center; gap: 8px; font-size: 0.8125rem; color: var(--ink-2); }
+.conf .bar { height: 6px; border-radius: 3px; background: var(--surface-2); overflow: hidden; }
+.conf .bar i { display: block; height: 100%; background: var(--ai); border-radius: 3px; }
+
+.detail { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; display: grid; gap: 22px; min-width: 0; }
+.dhead { display: grid; gap: 8px; }
+.dmeta { display: flex; flex-wrap: wrap; gap: 8px 14px; color: var(--ink-3); font-size: 0.875rem; align-items: center; }
+.dhead h2 { font-size: 1.5rem; font-weight: 700; }
+.says { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start; background: var(--ai-soft); border-radius: var(--radius); padding: 14px 16px; }
+.says .who { font-weight: 700; color: var(--ai); font-size: 0.875rem; white-space: nowrap; display: inline-flex; gap: 6px; align-items: center; }
+.says .who svg { width: 14px; height: 14px; }
+.says p { margin: 0; max-width: 65ch; }
+.cols { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 22px; }
+.block { display: grid; gap: 10px; align-content: start; min-width: 0; }
+.block h3 { font-size: 0.8125rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-3); font-family: var(--font-body); font-weight: 700; }
+.evidence { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.evidence li { display: grid; gap: 2px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+.evidence li:last-child { border-bottom: 0; padding-bottom: 0; }
+.evidence .lab { color: var(--ink-2); font-size: 0.9375rem; }
+.evidence .val { font-weight: 700; }
+.evidence .val span { font-weight: 400; color: var(--ink-3); }
+
+.chart { position: relative; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.chart .tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--bg); font-size: 0.8125rem; padding: 4px 8px; border-radius: 6px; white-space: nowrap; transform: translate(-50%, -120%); }
+.chart .tip[hidden] { display: none; }
+.chart-cap { font-size: 0.8125rem; color: var(--ink-3); }
+
+.meter { display: grid; gap: 6px; }
+.meter .big { font-family: var(--font-display); font-size: 2rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.meter .big small { font-size: 1rem; font-family: var(--font-body); color: var(--ink-2); font-weight: 400; margin-left: 6px; }
+.meter .track { position: relative; height: 10px; background: var(--surface-2); border-radius: 5px; }
+.meter .track i { position: absolute; inset: 0 auto 0 0; background: var(--ai); border-radius: 5px; }
+.meter .ticks { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--ink-3); }
+.note { margin: 0; color: var(--ink-2); font-size: 0.9375rem; max-width: 60ch; }
+.note b { color: var(--ink); }
+
+table.kv { width: 100%; border-collapse: collapse; font-size: 0.9375rem; }
+table.kv th, table.kv td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.kv th { color: var(--ink-3); font-weight: 400; width: 34%; }
+table.kv td.to { font-weight: 700; }
+.change { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 1.0625rem; }
+.change .from { text-decoration: line-through; color: var(--ink-3); }
+.change .arrow { color: var(--ink-3); }
+.change .to { font-weight: 700; background: var(--accent-soft); color: var(--accent); padding: 2px 8px; border-radius: 6px; }
+
+.actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.btn { border: 1px solid var(--line); background: var(--surface); color: var(--ink); padding: 10px 16px; border-radius: 8px; cursor: pointer; font-weight: 700; display: inline-flex; gap: 8px; align-items: center; }
+.btn:hover { border-color: var(--ink-3); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.primary:hover { filter: brightness(1.07); }
+.btn.danger { color: var(--crit); }
+.btn[disabled] { opacity: 0.5; cursor: not-allowed; }
+.btn svg { width: 16px; height: 16px; }
+
+.panel { border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; display: grid; gap: 12px; background: var(--surface-2); }
+.panel h4 { margin: 0; font-size: 1rem; font-family: var(--font-display); }
+.reasons { display: flex; flex-wrap: wrap; gap: 8px; border: 0; padding: 0; margin: 0; }
+.reasons legend { font-size: 0.875rem; color: var(--ink-2); margin-bottom: 8px; padding: 0; }
+.reasons label { display: inline-flex; gap: 6px; align-items: center; border: 1px solid var(--line); background: var(--surface); padding: 6px 10px; border-radius: 999px; cursor: pointer; font-size: 0.9375rem; }
+.reasons input { accent-color: var(--accent); }
+.reasons label:has(input:checked) { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.field { display: grid; gap: 6px; }
+.field label { font-size: 0.875rem; color: var(--ink-2); }
+.field select, .field input, .field textarea { border: 1px solid var(--line); background: var(--surface); padding: 8px 10px; border-radius: 8px; max-width: 100%; }
+.result { border-radius: var(--radius); padding: 14px 16px; display: grid; gap: 6px; border: 1px solid var(--line); }
+.result.ok { background: var(--good-soft); border-color: transparent; }
+.result.rej { background: var(--crit-soft); border-color: transparent; }
+.result.wait { background: var(--ai-soft); border-color: transparent; }
+.result p { margin: 0; }
+.result .r-title { font-weight: 700; display: flex; gap: 8px; align-items: center; }
+.result .r-title svg { width: 16px; height: 16px; }
+.logged { font-size: 0.875rem; color: var(--ink-3); }
+.linkish { background: none; border: 0; padding: 0; color: var(--accent); text-decoration: underline; cursor: pointer; font-weight: 700; }
+
+/* Learning + spec views */
+.lead { font-size: 1.125rem; max-width: 70ch; margin: 0 0 18px; color: var(--ink-2); }
+.lead b { color: var(--ink); }
+.grid2 { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; display: grid; gap: 14px; min-width: 0; align-content: start; }
+.card h2 { font-size: 1.1875rem; }
+.card .sub { margin: -8px 0 0; color: var(--ink-3); font-size: 0.9375rem; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 0.875rem; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.table-scroll { overflow-x: auto; }
+table.data { width: 100%; border-collapse: collapse; font-size: 0.9375rem; min-width: 520px; }
+table.data th, table.data td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.data th { font-size: 0.8125rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-3); font-weight: 700; }
+table.data td.num, table.data th.num { text-align: right; font-variant-numeric: tabular-nums; }
+.reqs { margin: 0; padding-left: 20px; display: grid; gap: 10px; }
+.reqs li { max-width: 70ch; }
+.reqs li .src { display: block; font-size: 0.8125rem; color: var(--ink-3); }
+.reqs li.fresh { color: var(--ink); }
+.reqs li.fresh .src { color: var(--ai); font-weight: 700; }
+.events { font-family: var(--font-mono); font-size: 0.8125rem; background: var(--surface-2); border-radius: 8px; padding: 12px; max-height: 340px; overflow: auto; margin: 0; white-space: pre-wrap; word-break: break-word; }
+.events .ev-name { color: var(--ai); font-weight: 500; }
+.empty { color: var(--ink-3); font-style: italic; }
+.toggle-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.patterns { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+.pattern { border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; display: grid; gap: 6px; background: var(--surface); }
+.pattern b { font-family: var(--font-display); font-size: 1.0625rem; }
+.pattern span { color: var(--ink-2); font-size: 0.9375rem; }
+/* Model feedback dashboard */
+.dash-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 12px 20px; margin-bottom: 16px; }
+.dash-titles h2 { font-size: 1.5rem; }
+.dash-titles p { margin: 2px 0 0; color: var(--ink-2); }
+.dash-ctl { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.seg { display: inline-flex; background: var(--surface-2); border-radius: 999px; padding: 3px; gap: 2px; }
+.seg button { border: 0; background: none; padding: 6px 14px; border-radius: 999px; cursor: pointer; color: var(--ink-2); font-weight: 700; font-size: 0.9375rem; }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 0 0 1px var(--line); }
+.kpi-card { padding: 0; gap: 0; overflow: hidden; }
+.kpis { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); border-bottom: 1px solid var(--line); }
+.kpi { border: 0; border-right: 1px solid var(--line); background: none; padding: 8px; text-align: left; cursor: pointer; min-width: 0; }
+.kpi:last-child { border-right: 0; }
+.kpi .in { border-radius: 10px; padding: 10px 12px; display: grid; gap: 2px; height: 100%; }
+.kpi:hover .in { background: var(--surface-2); }
+.kpi[aria-pressed="true"] .in { background: color-mix(in srgb, var(--accent) 7%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 28%, transparent); }
+.kpi:focus-visible { outline: none; }
+.kpi:focus-visible .in { outline: 3px solid var(--focus); outline-offset: -3px; }
+.kpi .lab { display: flex; justify-content: space-between; gap: 6px; font-size: 0.875rem; color: var(--ink-2); }
+.kpi[aria-pressed="true"] .lab { color: var(--ink); font-weight: 700; }
+.kpi .val { font-family: var(--font-display); font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: var(--ink-2); line-height: 1.15; }
+.kpi[aria-pressed="true"] .val { color: var(--ink); }
+.kpi .subl { font-size: 0.75rem; color: var(--ink-3); min-height: 2.4em; line-height: 1.25; }
+.kpi svg { width: 100%; height: 28px; display: block; }
+.delta { font-size: 0.75rem; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.delta.up { color: var(--good); } .delta.down { color: var(--crit); } .delta.flat { color: var(--ink-3); font-weight: 400; }
+.mc { padding: 16px 20px 12px; display: grid; gap: 8px; }
+.mc-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 16px; font-size: 0.9375rem; }
+.mc-head span { color: var(--ink-3); }
+.mc-legend { display: flex; gap: 14px; font-size: 0.8125rem; color: var(--ink-3); }
+.mc-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.mc-legend .ln { width: 18px; height: 0; border-top: 2px solid var(--accent); display: inline-block; }
+.mc-legend .ln.dash { border-top: 2px dashed var(--ink-3); }
+.insights { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin: 16px 0; }
+.insight { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; font-size: 0.9375rem; color: var(--ink-2); }
+.insight b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.panels { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (min-width: 1440px) { .panels { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.panel-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.panel-head span { font-size: 0.75rem; color: var(--ink-3); }
+.panels .card h2 { font-size: 1.0625rem; }
+.ranked { display: grid; }
+.rrow { position: relative; display: flex; align-items: center; gap: 10px; min-height: 42px; padding: 0 4px 6px; font-size: 0.9375rem; }
+.rrow .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rrow .v { font-variant-numeric: tabular-nums; }
+.rrow .sh { width: 3.6em; text-align: right; color: var(--ink-3); font-size: 0.8125rem; font-variant-numeric: tabular-nums; }
+.rrow .trk { position: absolute; left: 4px; right: 4px; bottom: 6px; height: 3px; border-radius: 2px; background: var(--surface-2); overflow: hidden; }
+.rrow .trk i { position: absolute; inset: 0 auto 0 0; border-radius: 2px; background: var(--accent); opacity: 0.8; }
+.rrow:hover .trk i { opacity: 1; }
+.btn.small { padding: 5px 12px; font-size: 0.875rem; }
+.bands { display: grid; gap: 14px; }
+.band-row { display: grid; gap: 5px; }
+.band-row .bl { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 8px; font-size: 0.9375rem; }
+.band-row .bl span { color: var(--ink-3); font-size: 0.8125rem; }
+.band-bar { display: flex; gap: 2px; height: 14px; border-radius: 4px; overflow: hidden; background: var(--surface-2); }
+.band-bar span { display: block; min-width: 2px; }
+.band-row .bn { font-size: 0.8125rem; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+table.data td.mono { white-space: nowrap; }
+.foot { border-top: 1px solid var(--line); margin-top: 32px; padding-top: 18px; color: var(--ink-3); font-size: 0.875rem; display: grid; gap: 6px; }
+.foot p { margin: 0; max-width: 80ch; }
+.foot a { color: var(--accent); }
+.hxo { font-style: italic; color: var(--ink-2); }
+
+@media (max-width: 1100px) {
+  .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .kpi:nth-child(3n) { border-right: 0; }
+  .kpi:nth-child(-n+3) { border-bottom: 1px solid var(--line); }
+}
+@media (max-width: 900px) {
+  .review { grid-template-columns: 1fr; }
+  .cols, .grid2, .panels { grid-template-columns: 1fr; }
+  .tags { margin-left: 0; }
+}
+@media (max-width: 560px) {
+  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .kpi { border-bottom: 1px solid var(--line); }
+  .kpi:nth-child(3n) { border-right: 1px solid var(--line); }
+  .kpi:nth-child(2n) { border-right: 0; }
+  .kpi:nth-last-child(-n+2) { border-bottom: 0; }
+}
+@media (max-width: 480px) {
+  .tab { padding: 10px 8px; font-size: 0.9375rem; }
+  .detail { padding: 16px; }
+  .dhead h2 { font-size: 1.25rem; }
+  .btn { flex: 1 1 auto; justify-content: center; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .meter .track i, .conf .bar i { transition: width 0.4s ease; }
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <h1>Network Fix Review</h1>
+      <p>AI recommendations an operator can question, correct and teach</p>
+    </div>
+    <div class="tags">
+      <span class="tag">Simulated network · example data</span>
+      <span class="tag">Self-initiated concept · Elizabeth Hannan</span>
+    </div>
+  </div>
+</header>
+<div class="tabbar">
+  <div class="wrap">
+    <nav class="tabs" role="tablist" aria-label="Views">
+      <button class="tab" role="tab" id="tab-review" aria-controls="view-review" aria-selected="true">Review</button>
+      <button class="tab" role="tab" id="tab-learn" aria-controls="view-learn" aria-selected="false" tabindex="-1">What the model learns</button>
+      <button class="tab" role="tab" id="tab-spec" aria-controls="view-spec" aria-selected="false" tabindex="-1">Telemetry spec</button>
+    </nav>
+  </div>
+</div>
+
+<main class="wrap">
+  <section class="view" id="view-review" role="tabpanel" aria-labelledby="tab-review">
+    <div class="review">
+      <div class="queue" aria-label="Recommendations">
+        <div class="queue-head"><h2>Recommendations</h2><span id="queue-count"></span></div>
+        <div id="queue" class="queue"></div>
+        <button class="linkish" id="reset" type="button">Reset the demo</button>
+      </div>
+      <article class="detail" id="detail" aria-live="polite"></article>
+    </div>
+  </section>
+
+  <section class="view" id="view-learn" role="tabpanel" aria-labelledby="tab-learn" hidden>
+    <div class="dash-head">
+      <div class="dash-titles">
+        <h2>Model feedback</h2>
+        <p>Is the model earning operator trust, and what should it learn next?</p>
+      </div>
+      <div class="dash-ctl">
+        <span class="tag">Simulated example data</span>
+        <div class="seg" role="group" aria-label="Date range">
+          <button type="button" data-range="7" aria-pressed="false">7 days</button>
+          <button type="button" data-range="30" aria-pressed="true">30 days</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card kpi-card">
+      <div class="kpis" id="kpis"></div>
+      <div class="mc">
+        <div class="mc-head">
+          <div><b id="mc-title"></b> <span id="mc-sub"></span></div>
+          <div class="mc-legend" aria-hidden="true"><span><i class="ln"></i>This period</span><span><i class="ln dash"></i>Period before</span></div>
+        </div>
+        <div class="chart" id="main-chart"></div>
+      </div>
+    </div>
+
+    <div class="insights" id="insights" aria-label="Insights"></div>
+
+    <div class="panels">
+      <div class="card">
+        <div class="panel-head"><h2>Why operators reject</h2><span>Rejections</span></div>
+        <div class="ranked" id="rk-reasons"></div>
+      </div>
+      <div class="card">
+        <div class="panel-head"><h2>What operators edit</h2><span>Edits</span></div>
+        <div class="ranked" id="rk-fields"></div>
+      </div>
+      <div class="card">
+        <div class="panel-head"><h2>By fix type</h2><span>Decisions · accepted</span></div>
+        <div class="ranked" id="rk-kinds"></div>
+      </div>
+      <div class="card">
+        <div class="toggle-row">
+          <h2>Trust by confidence</h2>
+          <button class="btn small" id="chart-toggle" type="button" aria-pressed="false">Table</button>
+        </div>
+        <div class="legend" aria-hidden="true">
+          <span><i style="background: var(--s1)"></i>Accepted as is</span>
+          <span><i style="background: var(--s2)"></i>Edited</span>
+          <span><i style="background: var(--s3)"></i>Rejected</span>
+        </div>
+        <div class="chart" id="bands-chart"></div>
+        <div class="table-scroll" id="bands-table" hidden></div>
+      </div>
+    </div>
+
+    <div class="grid2" style="margin-top: 20px">
+      <div class="card">
+        <h2>Model-training requirements</h2>
+        <p class="sub">Written from the patterns in operator corrections, newest first</p>
+        <ol class="reqs" id="reqs"></ol>
+      </div>
+      <div class="card">
+        <h2>Training examples from this session</h2>
+        <p class="sub">One row per decision: what the model proposed and what the operator did</p>
+        <div class="table-scroll" id="examples"></div>
+      </div>
+      <div class="card">
+        <h2>Event stream</h2>
+        <p class="sub">Newest first, as the telemetry pipeline receives it</p>
+        <pre class="events" id="events" tabindex="0" aria-label="Telemetry events"></pre>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="view-spec" role="tabpanel" aria-labelledby="tab-spec" hidden>
+    <p class="lead">The telemetry is designed backwards from what operators are trying to do. Each goal gets a measure, and each measure tells the model team something specific.</p>
+    <div class="card">
+      <h2>From operator goals to model requirements</h2>
+      <div class="table-scroll">
+        <table class="data">
+          <thead><tr><th scope="col">Operator goal</th><th scope="col">What we measure</th><th scope="col">What it tells the model team</th></tr></thead>
+          <tbody>
+            <tr><td>Fix the problem fast without breaking users</td><td class="mono">rec_opened → decision time; rollback within 24 h</td><td>Which fix types need clearer evidence, and which fixes break things after they are applied</td></tr>
+            <tr><td>Trust the AI only as much as it deserves</td><td class="mono">accept, edit and reject share by confidence band; rollback by band</td><td>Whether the stated confidence is calibrated, band by band</td></tr>
+            <tr><td>Fix it my way when the AI is close</td><td class="mono">decision_edited {field, from, to}</td><td>Which parameters the model gets wrong; labeled pairs for fine-tuning</td></tr>
+            <tr><td>Know when the AI does not know</td><td class="mono">abstain_shown; more_data_requested; diagnosis after more data</td><td>Whether abstaining saves bad actions, and which signals are missing</td></tr>
+            <tr><td>Not see a rejected idea again next week</td><td class="mono">decision_rejected {reason}; repeat of a rejected fix within 7 days</td><td>Suppression rules and negative training examples</td></tr>
+            <tr><td>See that the fix worked</td><td class="mono">outcome_verified {metric, before, after}</td><td>Ground truth for the model's predicted impact</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card" style="margin-top: 20px">
+      <h2>Event schema</h2>
+      <div class="table-scroll">
+        <table class="data">
+          <thead><tr><th scope="col">Event</th><th scope="col">Fields</th><th scope="col">Fires when</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">rec_opened</td><td class="mono">rec_id, kind, confidence, risk</td><td>An operator opens a recommendation</td></tr>
+            <tr><td class="mono">evidence_viewed</td><td class="mono">rec_id, evidence_id, dwell_ms</td><td>An operator hovers or focuses an evidence chart</td></tr>
+            <tr><td class="mono">decision_accepted</td><td class="mono">rec_id, confidence, ms_to_decide</td><td>The fix is applied as proposed</td></tr>
+            <tr><td class="mono">decision_edited</td><td class="mono">rec_id, field, from, to, ms_to_decide</td><td>The operator changes the fix, then applies it</td></tr>
+            <tr><td class="mono">decision_rejected</td><td class="mono">rec_id, reason, note, ms_to_decide</td><td>The operator turns the fix down</td></tr>
+            <tr><td class="mono">more_data_requested</td><td class="mono">rec_id, probe, duration</td><td>The operator asks the AI to gather more evidence</td></tr>
+            <tr><td class="mono">rollback</td><td class="mono">rec_id, minutes_after_apply</td><td>An applied fix is undone</td></tr>
+            <tr><td class="mono">outcome_verified</td><td class="mono">rec_id, metric, before, after</td><td>The monitored metric settles after a fix</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card" style="margin-top: 20px">
+      <h2>Patterns on this page</h2>
+      <div class="patterns">
+        <div class="pattern"><b>Why, with evidence</b><span>Each recommendation shows the signals behind it, against what is typical for that site.</span></div>
+        <div class="pattern"><b>Confidence with a track record</b><span>The percentage comes with how often fixes at that confidence were accepted and rolled back.</span></div>
+        <div class="pattern"><b>What would change my mind</b><span>The AI names the signal that would make it withdraw the recommendation.</span></div>
+        <div class="pattern"><b>Preview the change</b><span>Setting before and after, who is affected, and how to undo it, before anything runs.</span></div>
+        <div class="pattern"><b>Accept, edit or reject with a reason</b><span>Edits and reasons are captured as training labels, not lost in a ticket.</span></div>
+        <div class="pattern"><b>Risk sets the default</b><span>Low-confidence, high-impact fixes default to investigating first, not applying.</span></div>
+        <div class="pattern"><b>The AI can say it does not know</b><span>When nothing explains the data, it asks for more instead of guessing.</span></div>
+        <div class="pattern"><b>Verify, then keep or roll back</b><span>After a fix, the metric is watched and a one-step rollback stays open.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <p>Built by Elizabeth Hannan with HXO. <span class="hxo">HXO (Human Experience Optimization) is a design methodology that starts from human outcomes, not features, technology or business requirements, and tests every system with one question: does it help or hurt the full spectrum of human experience?</span></p>
+    <p>Self-initiated concept. The network, the model and every number on this page are simulated so the interaction can be tested; no real systems are changed. Nothing you do here leaves your browser.</p>
+  </footer>
+</main>
+
+<script>
+(() => {
+  "use strict";
+
+  // ---------- Example data (simulated) ----------
+  const RECS = [
+    {
+      id: "R-1042", kind: "Wireless", site: "Campus HQ · Building B, floor 3",
+      title: "Move floor 3 access points off 5 GHz channel 36",
+      says: "Three access points on floor 3 now share channel 36 with a new neighbor network. Clients are retrying four times more than usual. Moving them to channel 149 should clear it.",
+      confidence: 0.86, risk: "Low",
+      evidence: [
+        { id: "retry", label: "Retry rate on channel 36, last 24 hours", now: "18.4%", base: "typical 4.1%", unit: "%", baseline: 4.1,
+          series: [4.2,3.9,4.1,4.4,4.0,3.8,4.3,4.6,5.1,4.9,5.3,6.8,9.7,12.4,14.9,16.2,17.5,18.1,17.8,18.6,18.9,18.2,18.4,18.4], xlab: ["24 h ago", "now"] },
+        { id: "neigh", label: "Networks sharing channel 36 within range", now: "3", base: "typical 0" },
+        { id: "tix", label: "Help-desk tickets mentioning Wi-Fi on floor 3", now: "12 in 24 h", base: "typical 1 a day" }
+      ],
+      mind: "If retry rates on channel 149 neighbors rise above 8% in the next hour, I would withdraw this.",
+      calib: { band: "High", accepted: 81, rolledBack: 4, kind: "channel changes" },
+      change: { field: "Channel", from: "36", to: "149", options: ["149", "153", "157", "161", "44 (DFS-free, lower power)"] },
+      affected: "42 clients reconnect for about 3 seconds",
+      undo: "One-step rollback for 24 hours",
+      outcome: { metric: "Retry rate", before: "18.4%", after: "5.7%", after2: "6.3%" }
+    },
+    {
+      id: "R-1043", kind: "Capacity", site: "Phoenix branch · WAN uplink",
+      title: "Move the nightly backup out of Thursday's predicted peak",
+      says: "Thursday mornings have climbed six weeks in a row. I predict the uplink will reach 94% between 10:00 and 12:00 this Thursday, when the backup job runs. Moving the backup to 02:00 avoids the overlap.",
+      confidence: 0.71, risk: "Low",
+      evidence: [
+        { id: "peak", label: "Peak uplink use on the last six Thursdays", now: "91%", base: "forecast 94%", unit: "%", baseline: 80,
+          series: [78, 81, 84, 86, 89, 91], forecast: 94, xlab: ["6 weeks ago", "last Thu"] },
+        { id: "job", label: "Backup job traffic during that window", now: "38% of the link", base: "" },
+        { id: "slo", label: "Video calls with poor quality during the last peak", now: "17", base: "typical 2" }
+      ],
+      mind: "If Thursday's 09:00 reading is under 70%, the peak is not coming and I would cancel the move.",
+      calib: { band: "Medium", accepted: 54, rolledBack: 6, kind: "capacity forecasts" },
+      change: { field: "Backup window", from: "10:00–12:00", to: "02:00–04:00", options: ["02:00–04:00", "22:00–00:00", "Saturday 06:00–08:00"] },
+      affected: "No users; the backup finishes before the office opens",
+      undo: "Reschedule back at any time",
+      outcome: { metric: "Thursday peak", before: "94% forecast", after: "61%", after2: "61%" }
+    },
+    {
+      id: "R-1044", kind: "Lifecycle", site: "Campus HQ · 12 access switches",
+      title: "Upgrade 12 access switches off firmware with a memory leak",
+      says: "These 12 switches run firmware 17.9.4, which has a published memory leak. Memory use is climbing on all of them and reaches 90% in about three days. I recommend upgrading in Saturday's maintenance window.",
+      confidence: 0.93, risk: "Medium",
+      evidence: [
+        { id: "mem", label: "Memory use on the 12 switches, last 14 days (average)", now: "80%", base: "limit 90%", unit: "%", baseline: 90, baselineLabel: "limit 90%",
+          series: [41,44,47,50,53,56,59,62,65,68,71,74,77,80], xlab: ["14 days ago", "today"] },
+        { id: "adv", label: "Vendor advisory matching this firmware", now: "1 match", base: "fixed in 17.9.6" }
+      ],
+      mind: "If memory stops climbing for 24 hours, I would move this to the next regular window instead.",
+      calib: { band: "High", accepted: 77, rolledBack: 2, kind: "firmware upgrades" },
+      change: { field: "Maintenance window", from: "Not scheduled", to: "Saturday 01:00–03:00", options: ["Saturday 01:00–03:00", "Sunday 01:00–03:00", "Tonight 23:00–01:00"] },
+      affected: "12 wiring closets lose service for about 6 minutes each, one at a time",
+      undo: "Downgrade takes about 20 minutes per switch",
+      outcome: { metric: "Memory use", before: "80%", after: "34%", after2: "34%" }
+    },
+    {
+      id: "R-1045", kind: "Security", site: "Campus HQ · workstation 10.20.4.17",
+      title: "Quarantine a workstation with unusual DNS traffic",
+      says: "This workstation sent about 250 DNS queries a minute for four hours, twenty times its normal rate. I'm not sure it's malicious: 40% of patterns like this turn out to be backup software. I recommend a packet capture before quarantine.",
+      confidence: 0.58, risk: "High", lowConfidence: true,
+      evidence: [
+        { id: "dns", label: "DNS queries per minute from this host, last 12 hours", now: "248", base: "typical 13", unit: "", baseline: 13,
+          series: [12,14,11,13,12,15,240,260,255,248,12,13], xlab: ["12 h ago", "now"] },
+        { id: "dom", label: "Distinct domains queried during the burst", now: "3,104", base: "typical 40" },
+        { id: "sw", label: "Backup agent installed on this host", now: "Yes", base: "" }
+      ],
+      mind: "If the queries resolve to the backup vendor's domains, this is not an attack and I would close it.",
+      calib: { band: "Low", accepted: 16, rolledBack: 27, kind: "quarantines at this confidence" },
+      change: { field: "Network access", from: "Normal", to: "Quarantine VLAN 999", options: ["Quarantine VLAN 999", "Rate-limit DNS to 50 a minute"] },
+      affected: "One person loses network access until released",
+      undo: "Release from quarantine in one step",
+      probe: "Run a 30-minute packet capture on this host",
+      outcome: { metric: "DNS queries a minute", before: "248", after: "0", after2: "0" }
+    },
+    {
+      id: "R-1046", kind: "Diagnostics", site: "Seattle branch · WAN",
+      title: "No fix yet: intermittent packet loss at Seattle",
+      says: "Packet loss at Seattle swings between 0.8% and 3.1% and does not line up with any change, load peak or carrier event I can see. I don't have a recommendation. I need path data to find where the loss happens.",
+      confidence: null, risk: "Low", abstain: true,
+      evidence: [
+        { id: "loss", label: "Packet loss, last 24 hours", now: "1.7%", base: "typical under 0.5%", unit: "%", baseline: 0.5,
+          series: [0.8,1.2,0.9,2.4,1.1,3.1,0.9,1.0,2.8,0.8,1.7,2.2,0.9,1.4,3.0,1.1,0.8,2.6,1.3,0.9,2.9,1.2,1.0,1.7], xlab: ["24 h ago", "now"] },
+        { id: "corr", label: "Changes, load peaks or carrier events that line up", now: "None found", base: "" }
+      ],
+      probe: "Turn on path tracing for 1 hour",
+      affected: "Adds about 1% probe traffic for an hour",
+      undo: "Stops on its own after 1 hour"
+    }
+  ];
+
+  // ---------- Simulated decision history: 60 days, one record per operator decision ----------
+  // Every number on the dashboard is computed from these records (plus your decisions in this demo),
+  // so tiles, chart, lists and requirements always agree.
+  function mulberry32(a) { return function () { a |= 0; a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+  const DAYS = 68; // 60 days shown at most, plus a week so every trailing 7-day value has a full week behind it
+  const KINDS = [
+    { k: "Wireless",  w: 0.35, bands: { High: 0.6, Medium: 0.35, Low: 0.05 }, fields: [["Channel", 0.7], ["Transmit power", 0.3]], reasons: [["Right problem, wrong fix", 0.5], ["Bad timing", 0.25], ["Too risky right now", 0.15], ["Already fixed", 0.1]] },
+    { k: "Capacity",  w: 0.22, bands: { High: 0.25, Medium: 0.6, Low: 0.15 }, fields: [["Backup window", 0.65], ["QoS policy", 0.35]], reasons: [["Bad timing", 0.6], ["Wrong diagnosis", 0.3], ["Other", 0.1]] },
+    { k: "Lifecycle", w: 0.18, bands: { High: 0.85, Medium: 0.15, Low: 0 }, fields: [["Maintenance window", 1]], reasons: [["Bad timing", 0.55], ["Already fixed", 0.45]] },
+    { k: "Security",  w: 0.25, bands: { High: 0.1, Medium: 0.35, Low: 0.55 }, fields: [["Network access", 1]], reasons: [["Wrong diagnosis", 0.55], ["Too risky right now", 0.3], ["Other", 0.15]] }
+  ];
+  const OUT = { High: [0.8, 0.14, 0.06], Medium: [0.49, 0.29, 0.22], Low: [0.16, 0.24, 0.6] };
+  const ROLL = { High: 0.03, Medium: 0.07, Low: 0.2 };
+  const SECS = { High: 50, Medium: 110, Low: 190 };
+  function pick(rand, pairs) { let x = rand(), acc = 0; for (const [v, w] of pairs) { acc += w; if (x <= acc) return v; } return pairs[pairs.length - 1][0]; }
+  function genHistory() {
+    const rand = mulberry32(20261020), recs = [];
+    for (let day = 0; day < DAYS; day++) {
+      const later = day >= DAYS - 30;
+      const n = (later ? 5 : 4) + Math.floor(rand() * 5);
+      for (let j = 0; j < n; j++) {
+        const kind = pick(rand, KINDS.map((k) => [k, k.w]));
+        const b = pick(rand, Object.entries(kind.bands));
+        const p = OUT[b].slice();
+        if (!later) { p[0] -= 0.06; p[2] += 0.06; } // the model improved after last month's retraining
+        const outcome = pick(rand, [["accepted", p[0]], ["edited", p[1]], ["rejected", p[2]]]);
+        const rec = { day, kind: kind.k, band: b, outcome, secs: Math.round(SECS[b] * (0.55 + rand() * 0.9)) };
+        if (outcome === "edited") rec.field = pick(rand, kind.fields);
+        if (outcome === "rejected") rec.reason = pick(rand, kind.reasons);
+        if (outcome !== "rejected") rec.rolledBack = rand() < ROLL[b];
+        recs.push(rec);
+      }
+    }
+    return recs;
+  }
+  const HISTORY = genHistory();
+  const REASONS = ["Wrong diagnosis", "Right problem, wrong fix", "Bad timing", "Too risky right now", "Already fixed", "Other"];
+
+  // ---------- State ----------
+  let state;
+  function freshState() {
+    const s = { current: "R-1042", decisions: {}, events: [], examples: [], openedAt: {}, newReqs: [], panel: null, tableView: false, range: 30, metric: "accepted" };
+    return s;
+  }
+  state = freshState();
+
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const esc = (v) => String(v).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const recById = (id) => RECS.find((r) => r.id === id);
+  const band = (c) => (c == null ? "None" : c >= 0.8 ? "High" : c >= 0.6 ? "Medium" : "Low");
+  const clock = () => new Date().toTimeString().slice(0, 8);
+
+  const ICON = {
+    ai: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5l1.6 3.9 3.9 1.6-3.9 1.6L8 12.5 6.4 8.6 2.5 7l3.9-1.6z" fill="currentColor"/></svg>',
+    check: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    x: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+    edit: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 13l1-3.5L10.5 3 13 5.5 6.5 12z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>',
+    dot: '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="4" fill="currentColor"/></svg>',
+    tri: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2l6.5 11.5h-13z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 6.5v3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="8" cy="11.6" r="0.9" fill="currentColor"/></svg>',
+    q: '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M6.3 6.2a1.8 1.8 0 1 1 2.5 1.7c-.5.2-.8.6-.8 1.1v.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="8" cy="11.5" r="0.9" fill="currentColor"/></svg>',
+    clock: '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 4.5V8l2.5 1.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>'
+  };
+
+  function statusOf(r) {
+    const d = state.decisions[r.id];
+    if (!d) return { cls: "p-new", label: "Needs review", icon: ICON.dot };
+    if (d.type === "accepted") return { cls: "p-acc", label: d.rolledBack ? "Rolled back" : "Applied", icon: ICON.check };
+    if (d.type === "edited") return { cls: "p-edit", label: d.rolledBack ? "Rolled back" : "Edited, applied", icon: ICON.edit };
+    if (d.type === "rejected") return { cls: "p-rej", label: "Rejected", icon: ICON.x };
+    return { cls: "p-wait", label: "Gathering data", icon: ICON.clock };
+  }
+  function riskPill(r) {
+    const icon = r.risk === "Low" ? ICON.dot : ICON.tri;
+    return `<span class="pill risk-${r.risk}">${icon}${r.risk} risk</span>`;
+  }
+
+  // ---------- Telemetry ----------
+  function emit(name, fields) {
+    state.events.unshift({ t: clock(), name, fields });
+    if (state.events.length > 60) state.events.pop();
+    renderEvents();
+  }
+
+  // ---------- Queue ----------
+  function renderQueue() {
+    const q = $("#queue");
+    const open = RECS.filter((r) => !state.decisions[r.id]).length;
+    $("#queue-count").textContent = `${open} of ${RECS.length} need review`;
+    q.innerHTML = RECS.map((r) => {
+      const s = statusOf(r);
+      const conf = r.confidence == null
+        ? `<span class="pill p-wait">${ICON.q}No recommendation</span>`
+        : `<span class="conf"><span class="bar"><i style="width:${Math.round(r.confidence * 100)}%"></i></span><span>${Math.round(r.confidence * 100)}% sure</span></span>`;
+      return `<button class="qitem" type="button" data-id="${r.id}" aria-current="${r.id === state.current}">
+        <span class="row1"><span class="mono">${r.id} · ${esc(r.kind)}</span><span>${esc(r.site.split(" · ")[0])}</span></span>
+        <span class="ttl">${esc(r.title)}</span>
+        <span class="row3">${conf}${riskPill(r)}<span class="pill ${s.cls}">${s.icon}${s.label}</span></span>
+      </button>`;
+    }).join("");
+  }
+
+  // ---------- Charts ----------
+  function lineChart(ev, recId) {
+    const W = 520, H = 170, padL = 36, padR = 64, padT = 14, padB = 26;
+    const pts = ev.series.slice();
+    const all = pts.concat(ev.baseline != null ? [ev.baseline] : []).concat(ev.forecast != null ? [ev.forecast] : []);
+    let max = Math.max(...all), min = Math.min(0, ...all);
+    const step = niceStep((max - min) / 3);
+    max = Math.ceil(max / step) * step;
+    const n = pts.length + (ev.forecast != null ? 1 : 0);
+    const x = (i) => padL + (i / (n - 1)) * (W - padL - padR);
+    const y = (v) => padT + (1 - (v - min) / (max - min)) * (H - padT - padB);
+    const ticks = [];
+    for (let v = min; v <= max + 1e-9; v += step) ticks.push(v);
+    const fmt = (v) => (step < 1 ? v.toFixed(1) : Math.round(v).toLocaleString()) + (ev.unit || "");
+    const path = pts.map((v, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join("");
+    const last = pts.length - 1;
+    let fc = "";
+    if (ev.forecast != null) {
+      fc = `<path d="M${x(last)},${y(pts[last])}L${x(last + 1)},${y(ev.forecast)}" stroke="var(--s1)" stroke-width="2" stroke-dasharray="4 4" fill="none"/>
+            <circle cx="${x(last + 1)}" cy="${y(ev.forecast)}" r="4.5" fill="var(--surface)" stroke="var(--s1)" stroke-width="2"/>
+            <text x="${x(last + 1) + 8}" y="${y(ev.forecast) + 4}" font-size="12" fill="var(--ink)" font-weight="700">${fmt(ev.forecast)} forecast</text>`;
+    }
+    const baseLab = ev.baselineLabel || `typical ${fmt(ev.baseline)}`;
+    const base = ev.baseline != null
+      ? `<line x1="${padL}" x2="${W - padR}" y1="${y(ev.baseline)}" y2="${y(ev.baseline)}" stroke="var(--ink-3)" stroke-dasharray="3 4" stroke-width="1.25"/>
+         <text x="${W - padR + 6}" y="${y(ev.baseline) + 4}" font-size="12" fill="var(--ink-3)">${esc(baseLab)}</text>` : "";
+    const endLabel = ev.forecast != null ? "" : `<text x="${x(last) + 8}" y="${y(pts[last]) + 4}" font-size="12" font-weight="700" fill="var(--ink)">${fmt(pts[last])}</text>`;
+    return `<div class="chart" data-ev="${ev.id}" data-rec="${recId}">
+      <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(ev.label)}: now ${esc(ev.now)}, ${esc(ev.base)}" tabindex="0">
+        ${ticks.map((v) => `<line x1="${padL}" x2="${W - padR}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-width="1"/>
+          <text x="${padL - 6}" y="${y(v) + 4}" font-size="11" text-anchor="end" fill="var(--ink-3)">${fmt(v)}</text>`).join("")}
+        ${base}
+        <path d="${path}" fill="none" stroke="var(--s1)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        <circle cx="${x(last)}" cy="${y(pts[last])}" r="4.5" fill="var(--s1)" stroke="var(--surface)" stroke-width="2"/>
+        ${endLabel}${fc}
+        <text x="${padL}" y="${H - 6}" font-size="11" fill="var(--ink-3)">${esc(ev.xlab[0])}</text>
+        <text x="${x(last)}" y="${H - 6}" font-size="11" text-anchor="end" fill="var(--ink-3)">${esc(ev.xlab[1])}</text>
+        <line class="xh" x1="0" x2="0" y1="${padT}" y2="${H - padB}" stroke="var(--ink-3)" stroke-width="1" visibility="hidden"/>
+        <rect class="hit" x="${padL}" y="${padT}" width="${W - padL - padR}" height="${H - padT - padB}" fill="transparent"/>
+      </svg>
+      <div class="tip" hidden></div>
+    </div>`;
+  }
+  function niceStep(raw) {
+    const p = Math.pow(10, Math.floor(Math.log10(raw || 1)));
+    const m = raw / p;
+    return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 5 ? 5 : 10) * p;
+  }
+  function wireChart(el) {
+    const svg = el.querySelector("svg"), tip = el.querySelector(".tip"), xh = el.querySelector(".xh");
+    const rec = recById(el.dataset.rec), ev = rec.evidence.find((e) => e.id === el.dataset.ev);
+    const pts = ev.series, n = pts.length + (ev.forecast != null ? 1 : 0);
+    const vb = svg.viewBox.baseVal, padL = 36, padR = 64;
+    let seen = false;
+    const show = (i) => {
+      const xi = padL + (i / (n - 1)) * (vb.width - padL - padR);
+      const v = i < pts.length ? pts[i] : ev.forecast;
+      const scale = svg.getBoundingClientRect().width / vb.width;
+      xh.setAttribute("x1", xi); xh.setAttribute("x2", xi); xh.setAttribute("visibility", "visible");
+      tip.hidden = false;
+      tip.style.left = xi * scale + "px";
+      tip.style.top = "12px";
+      const label = i < pts.length ? pointLabel(ev, i, pts.length) : "forecast";
+      tip.textContent = `${label}: ${v}${ev.unit || ""}`;
+      if (!seen) { seen = true; emit("evidence_viewed", { rec_id: rec.id, evidence_id: ev.id }); }
+    };
+    const hide = () => { tip.hidden = true; xh.setAttribute("visibility", "hidden"); };
+    svg.addEventListener("pointermove", (e) => {
+      const r = svg.getBoundingClientRect();
+      const vx = ((e.clientX - r.left) / r.width) * vb.width;
+      const i = Math.max(0, Math.min(n - 1, Math.round(((vx - padL) / (vb.width - padL - padR)) * (n - 1))));
+      show(i);
+    });
+    svg.addEventListener("pointerleave", hide);
+    let ki = pts.length - 1;
+    svg.addEventListener("focus", () => show(ki));
+    svg.addEventListener("blur", hide);
+    svg.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowLeft") { ki = Math.max(0, ki - 1); show(ki); e.preventDefault(); }
+      if (e.key === "ArrowRight") { ki = Math.min(n - 1, ki + 1); show(ki); e.preventDefault(); }
+    });
+  }
+  function pointLabel(ev, i, len) {
+    const back = len - 1 - i;
+    if (/24 hours/.test(ev.label)) return back === 0 ? "now" : `${back} h ago`;
+    if (/12 hours/.test(ev.label)) return back === 0 ? "now" : `${back} h ago`;
+    if (/14 days/.test(ev.label)) return back === 0 ? "today" : `${back} days ago`;
+    if (/Thursdays/.test(ev.label)) return back === 0 ? "last Thursday" : `${back + 1} Thursdays ago`;
+    return `point ${i + 1}`;
+  }
+
+  // ---------- Detail ----------
+  function renderDetail() {
+    const r = recById(state.current);
+    const d = state.decisions[r.id];
+    if (!state.openedAt[r.id]) {
+      state.openedAt[r.id] = Date.now();
+      emit("rec_opened", { rec_id: r.id, kind: r.kind, confidence: r.confidence, risk: r.risk });
+    }
+    const pct = r.confidence == null ? null : Math.round(r.confidence * 100);
+    const ev0 = r.evidence[0];
+    const others = r.evidence.slice(1);
+
+    let sure;
+    if (r.abstain) {
+      sure = `<div class="block"><h3>How sure</h3>
+        <div class="meter"><div class="big">No fix<small>not enough evidence</small></div></div>
+        <p class="note">Nothing in the data explains this yet, so the AI does not guess. It asks for the one probe most likely to locate the loss.</p></div>`;
+    } else {
+      sure = `<div class="block"><h3>How sure</h3>
+        <div class="meter">
+          <div class="big">${pct}%<small>${band(r.confidence)} confidence</small></div>
+          <div class="track" role="img" aria-label="${pct} percent confidence"><i style="width:${pct}%"></i></div>
+          <div class="ticks"><span>0</span><span>60</span><span>80</span><span>100</span></div>
+        </div>
+        <p class="note"><b>Track record:</b> operators accepted ${r.calib.accepted}% of ${esc(r.calib.kind)} at this confidence and rolled back ${r.calib.rolledBack}%.</p>
+        <p class="note"><b>What would change my mind:</b> ${esc(r.mind)}</p></div>`;
+    }
+
+    const changeBlock = r.abstain
+      ? `<div class="block"><h3>What it will do</h3>
+          <table class="kv"><tbody>
+            <tr><th scope="row">Probe</th><td class="to">${esc(r.probe)}</td></tr>
+            <tr><th scope="row">Who is affected</th><td>${esc(r.affected)}</td></tr>
+            <tr><th scope="row">How to undo</th><td>${esc(r.undo)}</td></tr>
+          </tbody></table></div>`
+      : `<div class="block"><h3>What changes</h3>
+          <div class="change"><span>${esc(r.change.field)}:</span><span class="from">${esc(r.change.from)}</span><span class="arrow" aria-hidden="true">→</span><span class="to">${esc(currentTo(r))}</span></div>
+          <table class="kv"><tbody>
+            <tr><th scope="row">Who is affected</th><td>${esc(r.affected)}</td></tr>
+            <tr><th scope="row">How to undo</th><td>${esc(r.undo)}</td></tr>
+            <tr><th scope="row">Risk</th><td>${riskPill(r)}</td></tr>
+          </tbody></table></div>`;
+
+    $("#detail").innerHTML = `
+      <div class="dhead">
+        <div class="dmeta"><span class="mono">${r.id}</span><span>${esc(r.kind)}</span><span>${esc(r.site)}</span></div>
+        <h2>${esc(r.title)}</h2>
+      </div>
+      <div class="says"><span class="who">${ICON.ai}AI says</span><p>${esc(r.says)}</p></div>
+      <div class="cols">
+        <div class="block"><h3>Why</h3>
+          ${lineChart(ev0, r.id)}
+          <p class="chart-cap">${esc(ev0.label)}. Now <b>${esc(ev0.now)}</b>${ev0.base ? `, ${esc(ev0.base)}` : ""}.</p>
+          ${others.length ? `<ul class="evidence">${others.map((e) => `<li><span class="lab">${esc(e.label)}</span><span class="val">${esc(e.now)}${e.base ? ` <span>· ${esc(e.base)}</span>` : ""}</span></li>`).join("")}</ul>` : ""}
+        </div>
+        ${sure}
+      </div>
+      ${changeBlock}
+      <div id="decision"></div>`;
+    $("#detail").querySelectorAll(".chart").forEach(wireChart);
+    renderDecision();
+  }
+  function currentTo(r) {
+    const d = state.decisions[r.id];
+    return d && d.type === "edited" ? d.to : r.change.to;
+  }
+
+  function renderDecision() {
+    const r = recById(state.current);
+    const d = state.decisions[r.id];
+    const box = $("#decision");
+    if (d) { box.innerHTML = resultCard(r, d); wireResult(r, d); return; }
+
+    if (r.abstain) {
+      box.innerHTML = `<div class="actions">
+        <button class="btn primary" type="button" data-act="probe">${ICON.clock}${esc(r.probe)}</button>
+        <button class="btn" type="button" data-act="reject">Dismiss with a reason</button>
+      </div>${state.panel === "reject" ? rejectPanel() : ""}`;
+    } else if (r.lowConfidence) {
+      box.innerHTML = `<p class="note" style="margin-bottom:12px"><b>Low confidence, high impact.</b> The safer default is to investigate first. You can still apply the fix.</p>
+      <div class="actions">
+        <button class="btn primary" type="button" data-act="probe">${ICON.clock}${esc(r.probe)}</button>
+        <button class="btn" type="button" data-act="edit">${ICON.edit}Choose a different action</button>
+        <button class="btn" type="button" data-act="accept-confirm">Quarantine now</button>
+        <button class="btn danger" type="button" data-act="reject">${ICON.x}Reject</button>
+      </div>${panelHtml(r)}`;
+    } else {
+      box.innerHTML = `<div class="actions">
+        <button class="btn primary" type="button" data-act="accept">${ICON.check}Accept and apply</button>
+        <button class="btn" type="button" data-act="edit">${ICON.edit}Edit before applying</button>
+        <button class="btn danger" type="button" data-act="reject">${ICON.x}Reject</button>
+      </div>${panelHtml(r)}`;
+    }
+    box.querySelectorAll("[data-act]").forEach((b) => b.addEventListener("click", () => act(r, b.dataset.act)));
+    const form = box.querySelector("form");
+    if (form) form.addEventListener("submit", (e) => { e.preventDefault(); submitPanel(r, form); });
+    const first = box.querySelector(".panel select, .panel input");
+    if (first && state.focusPanel) { first.focus(); state.focusPanel = false; }
+  }
+  function panelHtml(r) {
+    if (state.panel === "edit") {
+      return `<form class="panel" style="margin-top:14px" aria-label="Edit the fix">
+        <h4>Edit before applying</h4>
+        <div class="field"><label for="edit-to">${esc(r.change.field)}</label>
+          <select id="edit-to">${r.change.options.map((o) => `<option${o === r.change.to ? " selected" : ""}>${esc(o)}</option>`).join("")}</select></div>
+        <div class="field"><label for="edit-why">Why (optional, helps the model)</label><input id="edit-why" type="text" placeholder="For example: 149 is crowded on floor 2"></div>
+        <div class="actions"><button class="btn primary" type="submit">${ICON.check}Apply edited fix</button><button class="btn" type="button" data-act="close">Cancel</button></div>
+      </form>`;
+    }
+    if (state.panel === "reject") return rejectPanel();
+    if (state.panel === "confirm") {
+      return `<form class="panel" style="margin-top:14px" aria-label="Confirm">
+        <h4>Quarantine at 58% confidence?</h4>
+        <p class="note">Fixes like this at this confidence were rolled back 27% of the time. One person loses network access until released.</p>
+        <div class="actions"><button class="btn primary" type="submit">Yes, quarantine now</button><button class="btn" type="button" data-act="close">Go back</button></div>
+        <input type="hidden" id="confirm-flag" value="1">
+      </form>`;
+    }
+    return "";
+  }
+  function rejectPanel() {
+    return `<form class="panel" style="margin-top:14px" aria-label="Reject with a reason">
+      <h4>Why are you rejecting it?</h4>
+      <fieldset class="reasons"><legend>Your reason becomes a training label.</legend>
+        ${REASONS.map((x, i) => `<label><input type="radio" name="reason" value="${esc(x)}"${i === 1 ? "" : ""}>${esc(x)}</label>`).join("")}
+      </fieldset>
+      <div class="field"><label for="rej-note">Note (optional)</label><input id="rej-note" type="text" placeholder="What did the AI miss?"></div>
+      <p class="note" id="rej-err" hidden><b>Pick a reason</b> so the model can learn from it.</p>
+      <div class="actions"><button class="btn danger" type="submit">${ICON.x}Reject and teach the model</button><button class="btn" type="button" data-act="close">Cancel</button></div>
+    </form>`;
+  }
+
+  function act(r, a) {
+    if (a === "accept") return decide(r, { type: "accepted" });
+    if (a === "probe") return decide(r, { type: "probe" });
+    if (a === "edit") { state.panel = "edit"; state.focusPanel = true; return renderDecision(); }
+    if (a === "reject") { state.panel = "reject"; state.focusPanel = true; return renderDecision(); }
+    if (a === "accept-confirm") { state.panel = "confirm"; state.focusPanel = true; return renderDecision(); }
+    if (a === "close") { state.panel = null; return renderDecision(); }
+  }
+  function submitPanel(r, form) {
+    if (state.panel === "edit") {
+      const to = $("#edit-to").value, why = $("#edit-why").value.trim();
+      if (to === r.change.to) return decide(r, { type: "accepted" });
+      return decide(r, { type: "edited", from: r.change.to, to, why });
+    }
+    if (state.panel === "reject") {
+      const pick = form.querySelector('input[name="reason"]:checked');
+      if (!pick) { $("#rej-err").hidden = false; return; }
+      return decide(r, { type: "rejected", reason: pick.value, note: $("#rej-note").value.trim() });
+    }
+    if (state.panel === "confirm") return decide(r, { type: "accepted", confirmedLow: true });
+  }
+
+  function decide(r, d) {
+    const ms = Date.now() - (state.openedAt[r.id] || Date.now());
+    d.at = clock(); d.ms = ms;
+    state.decisions[r.id] = d;
+    state.panel = null;
+    const base = { rec_id: r.id, confidence: r.confidence, ms_to_decide: ms };
+    if (d.type === "accepted") emit("decision_accepted", base);
+    if (d.type === "edited") emit("decision_edited", { ...base, field: r.change.field, from: d.from, to: d.to });
+    if (d.type === "rejected") emit("decision_rejected", { ...base, reason: d.reason, note: d.note || null });
+    if (d.type === "probe") emit("more_data_requested", { rec_id: r.id, probe: r.probe, duration: r.abstain ? "60 min" : "30 min" });
+    state.examples.unshift({
+      rec: r.id, kind: r.kind, conf: r.confidence,
+      proposed: r.change ? `${r.change.field} → ${r.change.to}` : "No fix (abstain)",
+      label: d.type === "accepted" ? "Accept" : d.type === "edited" ? "Edit" : d.type === "rejected" ? "Reject" : "More data",
+      correction: d.type === "edited" ? `${r.change.field} → ${d.to}${d.why ? ` (${d.why})` : ""}` : d.type === "rejected" ? `${d.reason}${d.note ? `: ${d.note}` : ""}` : d.type === "probe" ? r.probe : "—"
+    });
+    addRequirement(r, d);
+    renderAll();
+    if (d.type === "accepted" || d.type === "edited") {
+      setTimeout(() => {
+        if (state.decisions[r.id] !== d || d.rolledBack) return;
+        d.verified = true;
+        const after = d.type === "edited" ? r.outcome.after2 : r.outcome.after;
+        emit("outcome_verified", { rec_id: r.id, metric: r.outcome.metric, before: r.outcome.before, after });
+        if (state.current === r.id) renderDecision();
+      }, 1600);
+    }
+    if (d.type === "probe") {
+      setTimeout(() => {
+        if (state.decisions[r.id] !== d) return;
+        d.found = true;
+        if (state.current === r.id) renderDecision();
+      }, 1800);
+    }
+  }
+  function addRequirement(r, d) {
+    let text = null;
+    if (d.type === "edited") text = `${r.kind}: you changed “${r.change.field}” from ${r.change.to} to ${d.to}. Add this pair to the fine-tuning set and check whether the model is missing a constraint${d.why ? ` (“${d.why}”)` : ""}.`;
+    if (d.type === "rejected") text = `${r.kind}: rejected as “${d.reason}” at ${r.confidence == null ? "no" : Math.round(r.confidence * 100) + "%"} confidence. Add as a negative example and suppress this fix for this site for 7 days.`;
+    if (d.type === "accepted" && d.confirmedLow) text = `${r.kind}: applied below 65% confidence after a warning. Track rollback for this case to test the investigate-first threshold.`;
+    if (text) state.newReqs.unshift({ text, src: `From your decision on ${r.id}, ${d.at}` });
+  }
+
+  function resultCard(r, d) {
+    if (d.type === "probe") {
+      if (r.abstain) {
+        return d.found
+          ? `<div class="result wait"><p class="r-title">${ICON.ai}Path data is in (simulated)</p><p>Loss happens at one carrier hop between Seattle and the Portland exchange, 2.1% at peak. The AI now recommends opening a carrier ticket with the hop and the times attached.</p><p class="logged">Logged as <span class="mono">more_data_requested</span>. <button class="linkish" type="button" data-go="learn">See what the model learns</button></p></div>`
+          : `<div class="result wait"><p class="r-title">${ICON.clock}Path tracing is on (simulated)</p><p>The AI will report back when it has enough data.</p></div>`;
+      }
+      return d.found
+        ? `<div class="result wait"><p class="r-title">${ICON.ai}Capture finished (simulated)</p><p>97% of the queries went to the backup vendor's domains after a failed update. Not an attack. The AI recommends restarting the backup agent instead of quarantine.</p><p class="logged">Logged as <span class="mono">more_data_requested</span>. <button class="linkish" type="button" data-go="learn">See what the model learns</button></p></div>`
+        : `<div class="result wait"><p class="r-title">${ICON.clock}Packet capture running (simulated)</p><p>The workstation stays online while the capture runs.</p></div>`;
+    }
+    if (d.type === "rejected") {
+      return `<div class="result rej"><p class="r-title">${ICON.x}Rejected: ${esc(d.reason)}</p><p>Sent as a training example. This fix won't be suggested again for this site for 7 days.</p><p class="logged">Logged as <span class="mono">decision_rejected</span> at ${d.at}. <button class="linkish" type="button" data-go="learn">See what the model learns</button></p></div>`;
+    }
+    const label = d.type === "edited" ? `Applied your edit: ${esc(r.change.field)} → ${esc(d.to)}` : `Applied: ${esc(r.change.field)} → ${esc(r.change.to)}`;
+    if (d.rolledBack) {
+      return `<div class="result"><p class="r-title">Rolled back</p><p>${esc(r.change.field)} is back to ${esc(r.change.from)}.</p><p class="logged">Logged as <span class="mono">rollback</span>.</p></div>`;
+    }
+    const after = d.type === "edited" ? r.outcome.after2 : r.outcome.after;
+    const watch = d.verified
+      ? `<p><b>${esc(r.outcome.metric)}: ${esc(r.outcome.before)} → ${esc(after)}</b> after the change (simulated).</p>`
+      : `<p>Watching ${esc(r.outcome.metric.toLowerCase())}…</p>`;
+    return `<div class="result ok"><p class="r-title">${ICON.check}${label}</p>${watch}
+      <div class="actions"><button class="btn" type="button" data-roll>Roll back</button></div>
+      <p class="logged">Logged as <span class="mono">${d.type === "edited" ? "decision_edited" : "decision_accepted"}</span> at ${d.at}. <button class="linkish" type="button" data-go="learn">See what the model learns</button></p></div>`;
+  }
+  function wireResult(r, d) {
+    const roll = $("#decision [data-roll]");
+    if (roll) roll.addEventListener("click", () => {
+      d.rolledBack = true;
+      const mins = Math.max(1, Math.round((Date.now() - state.openedAt[r.id]) / 60000));
+      emit("rollback", { rec_id: r.id, minutes_after_apply: mins });
+      state.newReqs.unshift({ text: `${r.kind}: rolled back after applying. Review the predicted impact for ${r.id}; treat as a weak negative label.`, src: `From your rollback on ${r.id}` });
+      renderAll();
+    });
+    $("#decision").querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => selectTab("learn")));
+  }
+
+  // ---------- Model feedback dashboard ----------
+  const MS_DAY = 864e5;
+  const dayDate = (day) => new Date(Date.now() - (DAYS - 1 - day) * MS_DAY);
+  const fmtDay = (day) => dayDate(day).toLocaleDateString("en", { day: "numeric", month: "short" });
+  const dur = (s) => { const t = Math.round(s); return t >= 60 ? `${Math.floor(t / 60)}m ${t % 60}s` : `${t}s`; };
+  const median = (a) => { if (!a.length) return null; const s = a.slice().sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+  const pctTxt = (v) => (v == null ? "—" : `${Math.round(v)}%`);
+
+  function allRecords() {
+    const recs = HISTORY.slice();
+    for (const r of RECS) {
+      const d = state.decisions[r.id];
+      if (!d || d.type === "probe" || r.confidence == null) continue;
+      recs.push({ day: DAYS - 1, kind: r.kind, band: band(r.confidence), outcome: d.type, secs: Math.max(1, Math.round(d.ms / 1000)),
+        field: d.type === "edited" ? r.change.field : undefined, reason: d.reason, rolledBack: !!d.rolledBack, session: true });
+    }
+    return recs;
+  }
+  // value of a metric over a list of records
+  const METRICS = {
+    decisions: { label: "Decisions", sub: "operator decisions on AI fixes", kind: "count", good: 0,
+      of: (rs) => rs.length, fmt: (v) => (v == null ? "—" : Math.round(v).toLocaleString()) },
+    accepted: { label: "Accepted as is", sub: "of decisions; the fix was right", kind: "rate", good: 1,
+      of: (rs) => (rs.length ? (100 * rs.filter((r) => r.outcome === "accepted").length) / rs.length : null), fmt: pctTxt },
+    edited: { label: "Edited", sub: "of decisions; each edit is a training label", kind: "rate", good: 0,
+      of: (rs) => (rs.length ? (100 * rs.filter((r) => r.outcome === "edited").length) / rs.length : null), fmt: pctTxt },
+    rejected: { label: "Rejected", sub: "of decisions, with a reason", kind: "rate", good: -1,
+      of: (rs) => (rs.length ? (100 * rs.filter((r) => r.outcome === "rejected").length) / rs.length : null), fmt: pctTxt },
+    rolled: { label: "Rolled back", sub: "of applied fixes, within 24 hours", kind: "rate", good: -1,
+      of: (rs) => { const ap = rs.filter((r) => r.outcome !== "rejected"); return ap.length ? (100 * ap.filter((r) => r.rolledBack).length) / ap.length : null; }, fmt: pctTxt },
+    secs: { label: "Time to decide", sub: "median, from opening a fix", kind: "time", good: -1,
+      of: (rs) => median(rs.map((r) => r.secs)), fmt: (v) => (v == null ? "—" : dur(v)) }
+  };
+  const ORDER = ["decisions", "accepted", "edited", "rejected", "rolled", "secs"];
+
+  function windowRecs(recs, from, to) { return recs.filter((r) => r.day >= from && r.day <= to); }
+  // per-day series across [from, to]; rates and times use a trailing 7-day window so small days do not swing the line
+  function series(recs, key, from, to) {
+    const m = METRICS[key], out = [];
+    for (let d = from; d <= to; d++) {
+      const rs = m.kind === "count" ? recs.filter((r) => r.day === d) : recs.filter((r) => r.day > d - 7 && r.day <= d);
+      out.push(m.of(rs));
+    }
+    return out;
+  }
+  function deltaHtml(key, cur, prev) {
+    const m = METRICS[key];
+    if (cur == null || prev == null) return "";
+    let txt, diff;
+    if (m.kind === "rate") { diff = cur - prev; const r = Math.round(diff); txt = r === 0 ? "±0 pts" : `${r > 0 ? "+" : "−"}${Math.abs(r)} ${Math.abs(r) === 1 ? "pt" : "pts"}`; if (r === 0) diff = 0; }
+    else { if (prev < 5 && m.kind === "count") return `<span class="delta flat">was ${m.fmt(prev)}</span>`; diff = ((cur - prev) / prev) * 100; const r = Math.round(diff); txt = r === 0 ? "±0%" : `${r > 0 ? "+" : "−"}${Math.abs(r)}%`; if (r === 0) diff = 0; }
+    const cls = diff === 0 || m.good === 0 ? "flat" : (diff > 0) === (m.good > 0) ? "up" : "down";
+    return `<span class="delta ${cls}" title="Previous ${state.range} days: ${m.fmt(prev)}">${txt}</span>`;
+  }
+  function spark(vals, color) {
+    const W = 120, H = 28, v = vals.filter((x) => x != null);
+    if (v.length < 2) return "";
+    const max = Math.max(...v), min = Math.min(...v), span = max - min || 1;
+    const pts = vals.map((x, i) => (x == null ? null : [(i / (vals.length - 1)) * W, H - 3 - ((x - min) / span) * (H - 6)])).filter(Boolean);
+    const d = pts.map((p, i) => `${i ? "L" : "M"}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join("");
+    return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><path d="${d}" fill="none" stroke="${color}" stroke-width="1.5" vector-effect="non-scaling-stroke"/></svg>`;
+  }
+  function niceTicks(max, count = 4) {
+    if (!(max > 0)) return [0, 1];
+    const raw = max / count, pow = Math.pow(10, Math.floor(Math.log10(raw)));
+    const step = [1, 2, 2.5, 5, 10].map((m) => m * pow).find((s) => s >= raw);
+    return Array.from({ length: Math.ceil(max / step) + 1 }, (_, i) => +(i * step).toFixed(10));
+  }
+
+  function renderDash() {
+    const recs = allRecords(), R = state.range;
+    const to = DAYS - 1, from = DAYS - R, pFrom = DAYS - 2 * R, pTo = DAYS - R - 1;
+    const cur = windowRecs(recs, from, to), prev = windowRecs(recs, pFrom, pTo);
+    $("#view-learn").querySelectorAll(".seg button").forEach((b) => b.setAttribute("aria-pressed", String(+b.dataset.range === R)));
+
+    // KPI strip
+    $("#kpis").innerHTML = ORDER.map((key) => {
+      const m = METRICS[key], sel = key === state.metric;
+      const v = m.of(cur), pv = m.of(prev);
+      return `<button class="kpi" type="button" data-metric="${key}" aria-pressed="${sel}">
+        <span class="in"><span class="lab"><span>${m.label}</span>${deltaHtml(key, v, pv)}</span>
+        <span class="val">${m.fmt(v)}</span><span class="subl">${m.sub}</span>
+        ${spark(series(recs, key, from, to), sel ? "var(--accent)" : "var(--ink-3)")}</span></button>`;
+    }).join("");
+    $("#kpis").querySelectorAll(".kpi").forEach((b) => b.addEventListener("click", () => { state.metric = b.dataset.metric; renderDash(); }));
+
+    // Main chart: selected metric, this period vs the period before
+    const m = METRICS[state.metric];
+    const now = series(recs, state.metric, from, to), before = series(recs, state.metric, pFrom, pTo);
+    $("#mc-title").textContent = m.label;
+    $("#mc-sub").textContent = m.kind === "count" ? `per day, last ${R} days` : m.kind === "rate" ? `trailing 7-day rate, last ${R} days` : `trailing 7-day median, last ${R} days`;
+    drawMain(now, before, m, from);
+
+    // Insights: computed, one line each
+    const by = (b) => cur.filter((r) => r.band === b);
+    const rej = (rs) => (rs.length ? Math.round((100 * rs.filter((r) => r.outcome === "rejected").length) / rs.length) : null);
+    const edits = cur.filter((r) => r.outcome === "edited");
+    const fieldCounts = countBy(edits, "field");
+    const hiT = median(by("High").map((r) => r.secs)), loT = median(by("Low").map((r) => r.secs));
+    const ins = [];
+    if (by("Low").length >= 5 && by("High").length >= 5) ins.push(`Under 60% confidence, operators reject <b>${rej(by("Low"))}%</b> of fixes, against <b>${rej(by("High"))}%</b> at 80% and up.`);
+    if (fieldCounts.length && edits.length >= 3) ins.push(`<b>${esc(fieldCounts[0][0])}</b> is the most edited setting: <b>${fieldCounts[0][1]} of ${edits.length}</b> edits.`);
+    if (hiT != null && loT != null && by("Low").length >= 3) ins.push(`High-confidence fixes are decided in a median <b>${dur(hiT)}</b>; low-confidence ones take <b>${dur(loT)}</b>.`);
+    $("#insights").innerHTML = ins.map((t) => `<div class="insight">${t}</div>`).join("");
+
+    // Ranked lists
+    const rejs = cur.filter((r) => r.outcome === "rejected");
+    ranked("#rk-reasons", countBy(rejs, "reason"), rejs.length, "rejections");
+    ranked("#rk-fields", fieldCounts, edits.length, "edits");
+    const kinds = countBy(cur, "kind").map(([k, n]) => {
+      const rs = cur.filter((r) => r.kind === k);
+      return [k, n, Math.round((100 * rs.filter((r) => r.outcome === "accepted").length) / rs.length)];
+    });
+    ranked("#rk-kinds", kinds, cur.length, "decisions", true);
+
+    renderBands(cur);
+    renderReqs(cur);
+  }
+  function countBy(rs, key) {
+    const c = {};
+    rs.forEach((r) => { if (r[key]) c[r[key]] = (c[r[key]] || 0) + 1; });
+    return Object.entries(c).sort((a, b) => b[1] - a[1]);
+  }
+  function ranked(sel, rows, total, noun, withRate) {
+    const el = $(sel);
+    if (!total) { el.innerHTML = `<p class="empty">No ${noun} in this period.</p>`; return; }
+    const max = rows.length ? rows[0][1] : 1;
+    el.innerHTML = rows.map(([name, n, rate]) => `<div class="rrow" title="${esc(name)}: ${n} of ${total} ${noun}">
+        <span class="nm">${esc(name)}</span><span class="v">${n}</span>
+        <span class="sh">${withRate ? rate + "%" : Math.round((100 * n) / total) + "%"}</span>
+        <span class="trk" aria-hidden="true"><i style="width:${Math.max(2, (100 * n) / max)}%"></i></span></div>`).join("")
+      + `<p class="chart-cap" style="margin:6px 4px 0">${total} ${noun} in the last ${state.range} days${withRate ? "; right column is the share accepted as is" : "; shares add to 100%"}.</p>`;
+  }
+  function drawMain(now, before, m, from) {
+    const el = $("#main-chart");
+    const W = Math.max(300, Math.round(el.clientWidth || 900)), H = W < 600 ? 200 : 240, padL = 48, padR = 12, padT = 12, padB = 28, n = now.length;
+    const vals = now.concat(before).filter((v) => v != null);
+    const ticks = niceTicks(Math.max(...vals, m.kind === "rate" ? 10 : 1));
+    const top = ticks[ticks.length - 1];
+    const x = (i) => padL + (n === 1 ? 0 : (i / (n - 1)) * (W - padL - padR));
+    const y = (v) => padT + (1 - v / top) * (H - padT - padB);
+    const line = (arr) => arr.map((v, i) => (v == null ? "" : `${i && arr[i - 1] != null ? "L" : "M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`)).join("");
+    const area = `${line(now)}L${x(n - 1)},${y(0)}L${x(0)},${y(0)}Z`;
+    const tickFmt = (t) => (m.kind === "rate" ? `${t}%` : m.kind === "time" ? dur(t) : t.toLocaleString());
+    const xt = []; const stepX = Math.max(1, Math.round((n - 1) / (W < 600 ? 3 : 5)));
+    for (let i = 0; i < n; i += stepX) xt.push(i);
+    if (xt[xt.length - 1] !== n - 1 && n - 1 - xt[xt.length - 1] > stepX / 2) xt.push(n - 1);
+    else xt[xt.length - 1] = n - 1;
+    el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${m.label}, last ${n} days, now ${m.fmt(now[n - 1])}" tabindex="0">
+      <defs><linearGradient id="mcfill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="var(--accent)" stop-opacity="0.16"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>
+      ${ticks.map((t) => `<line x1="${padL}" x2="${W - padR}" y1="${y(t)}" y2="${y(t)}" stroke="var(--line)"/><text x="${padL - 8}" y="${y(t) + 4}" font-size="12" text-anchor="end" fill="var(--ink-3)">${tickFmt(t)}</text>`).join("")}
+      ${xt.map((i) => `<text x="${x(i)}" y="${H - 8}" font-size="12" text-anchor="${i === 0 ? "start" : i === n - 1 ? "end" : "middle"}" fill="var(--ink-3)">${fmtDay(from + i)}</text>`).join("")}
+      <path d="${line(before)}" fill="none" stroke="var(--ink-3)" stroke-width="1.5" stroke-dasharray="4 4"/>
+      <path d="${area}" fill="url(#mcfill)"/>
+      <path d="${line(now)}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round"/>
+      <line class="xh" x1="0" x2="0" y1="${padT}" y2="${H - padB}" stroke="var(--ink-3)" visibility="hidden"/>
+      <circle class="dot" r="4.5" fill="var(--accent)" stroke="var(--surface)" stroke-width="2" visibility="hidden"/>
+      <rect x="${padL}" y="${padT}" width="${W - padL - padR}" height="${H - padT - padB}" fill="transparent" class="hit"/>
+    </svg><div class="tip" hidden></div>`;
+    const svg = el.querySelector("svg"), tip = el.querySelector(".tip"), xh = el.querySelector(".xh"), dot = el.querySelector(".dot");
+    let ki = n - 1;
+    const show = (i) => {
+      const sc = svg.getBoundingClientRect().width / W;
+      xh.setAttribute("x1", x(i)); xh.setAttribute("x2", x(i)); xh.setAttribute("visibility", "visible");
+      if (now[i] != null) { dot.setAttribute("cx", x(i)); dot.setAttribute("cy", y(now[i])); dot.setAttribute("visibility", "visible"); }
+      tip.hidden = false; tip.style.left = Math.min(Math.max(x(i) * sc, 80), svg.getBoundingClientRect().width - 80) + "px"; tip.style.top = "8px"; tip.style.transform = "translate(-50%, 0)";
+      tip.textContent = `${fmtDay(from + i)}: ${m.fmt(now[i])} · period before ${m.fmt(before[i])}`;
+    };
+    const hide = () => { tip.hidden = true; xh.setAttribute("visibility", "hidden"); dot.setAttribute("visibility", "hidden"); };
+    svg.addEventListener("pointermove", (e) => { const r = svg.getBoundingClientRect(); const vx = ((e.clientX - r.left) / r.width) * W; ki = Math.max(0, Math.min(n - 1, Math.round(((vx - padL) / (W - padL - padR)) * (n - 1)))); show(ki); });
+    svg.addEventListener("pointerleave", hide);
+    svg.addEventListener("focus", () => show(ki)); svg.addEventListener("blur", hide);
+    svg.addEventListener("keydown", (e) => { if (e.key === "ArrowLeft") { ki = Math.max(0, ki - 1); show(ki); e.preventDefault(); } if (e.key === "ArrowRight") { ki = Math.min(n - 1, ki + 1); show(ki); e.preventDefault(); } });
+  }
+
+  function renderBands(cur) {
+    const c = {};
+    ["High", "Medium", "Low"].forEach((b) => { const rs = cur.filter((r) => r.band === b); c[b] = { accepted: rs.filter((r) => r.outcome === "accepted").length, edited: rs.filter((r) => r.outcome === "edited").length, rejected: rs.filter((r) => r.outcome === "rejected").length }; });
+    const rows = ["High", "Medium", "Low"].filter((b) => c[b].accepted + c[b].edited + c[b].rejected > 0);
+    const keys = [["accepted", "var(--s1)", "accepted"], ["edited", "var(--s2)", "edited"], ["rejected", "var(--s3)", "rejected"]];
+    $("#bands-chart").innerHTML = `<div class="bands" role="img" aria-label="Operator decisions by AI confidence band">${rows.map((b) => {
+      const tot = c[b].accepted + c[b].edited + c[b].rejected;
+      const label = b === "High" ? "80% and up" : b === "Medium" ? "60–79%" : "Under 60%";
+      const pcts = keys.map(([k]) => Math.round((100 * c[b][k]) / tot));
+      return `<div class="band-row">
+        <div class="bl"><b>${b}</b><span>${label} · ${tot} decisions</span></div>
+        <div class="band-bar">${keys.map(([k, col, name], i) => c[b][k] ? `<span style="flex:${c[b][k]};background:${col}" title="${b} confidence: ${c[b][k]} ${name} of ${tot} (${pcts[i]}%)"></span>` : "").join("")}</div>
+        <div class="bn">${keys.map(([k, , name], i) => `${pcts[i]}% ${name}`).join(" · ")}</div>
+      </div>`;
+    }).join("")}</div>`;
+    // table view
+    $("#bands-table").innerHTML = `<table class="data"><thead><tr><th scope="col">Confidence band</th><th class="num" scope="col">Accepted as is</th><th class="num" scope="col">Edited, then applied</th><th class="num" scope="col">Rejected</th><th class="num" scope="col">Decisions</th></tr></thead><tbody>${
+      rows.map((b) => { const t = c[b].accepted + c[b].edited + c[b].rejected; return `<tr><td>${b}</td><td class="num">${c[b].accepted} (${Math.round(c[b].accepted / t * 100)}%)</td><td class="num">${c[b].edited} (${Math.round(c[b].edited / t * 100)}%)</td><td class="num">${c[b].rejected} (${Math.round(c[b].rejected / t * 100)}%)</td><td class="num">${t}</td></tr>`; }).join("")
+    }</tbody></table>`;
+  }
+  // Requirements are written from the same records the dashboard shows
+  function renderReqs(cur) {
+    const R = state.range, out = [];
+    const n = (f) => cur.filter(f).length;
+    const wWrong = n((r) => r.kind === "Wireless" && r.reason === "Right problem, wrong fix");
+    if (wWrong) out.push({ text: `Wireless fixes were rejected as “Right problem, wrong fix” ${wWrong} times. Add channel availability, including DFS channels and recent radar events, to the wireless features.`, src: `From ${wWrong} rejections, last ${R} days` });
+    const cTiming = n((r) => r.kind === "Capacity" && r.reason === "Bad timing");
+    if (cTiming) out.push({ text: `Capacity fixes were rejected as “Bad timing” ${cTiming} times. Add each site's business calendar (holidays, shift changes) to the forecast inputs.`, src: `From ${cTiming} rejections, last ${R} days` });
+    const secLow = cur.filter((r) => r.kind === "Security" && r.band === "Low");
+    const secLowRej = secLow.filter((r) => r.outcome === "rejected").length;
+    if (secLow.length) out.push({ text: `Security fixes under 60% confidence were rejected ${secLowRej} of ${secLow.length} times. Below 60%, recommend investigating first instead of acting.`, src: `From the Low band, last ${R} days` });
+    const edits = countBy(cur.filter((r) => r.outcome === "edited"), "field");
+    if (edits.length) out.push({ text: `“${edits[0][0]}” was edited ${edits[0][1]} times. Collect each edit as a labeled before-and-after pair for fine-tuning.`, src: `From edits, last ${R} days` });
+    const rb = n((r) => r.rolledBack);
+    if (rb) out.push({ text: `${rb} applied fixes were rolled back. Compare their predicted impact with what happened and keep them as weak negative labels.`, src: `From rollbacks, last ${R} days` });
+    const fresh = state.newReqs.map((q) => `<li class="fresh">${esc(q.text)}<span class="src">${esc(q.src)}</span></li>`).join("");
+    $("#reqs").innerHTML = fresh + out.map((q) => `<li>${esc(q.text)}<span class="src">${esc(q.src)}</span></li>`).join("");
+  }
+  function renderExamples() {
+    const el = $("#examples");
+    if (!state.examples.length) { el.innerHTML = `<p class="empty">No decisions yet. Accept, edit or reject a recommendation on the Review tab and it appears here.</p>`; return; }
+    el.innerHTML = `<table class="data"><thead><tr><th scope="col">Rec</th><th scope="col">Model proposed</th><th class="num" scope="col">Conf.</th><th scope="col">Label</th><th scope="col">Correction</th></tr></thead><tbody>${
+      state.examples.map((x) => `<tr><td class="mono">${x.rec}</td><td>${esc(x.proposed)}</td><td class="num">${x.conf == null ? "—" : Math.round(x.conf * 100) + "%"}</td><td>${x.label}</td><td>${esc(x.correction)}</td></tr>`).join("")
+    }</tbody></table>`;
+  }
+  function renderEvents() {
+    const el = $("#events");
+    if (!el) return;
+    if (!state.events.length) { el.innerHTML = `<span class="empty">Waiting for the first event.</span>`; return; }
+    el.innerHTML = state.events.map((e) => `${e.t}  <span class="ev-name">${e.name}</span> ${esc(JSON.stringify(e.fields))}`).join("\n");
+  }
+
+  // ---------- Tabs ----------
+  const TABS = ["review", "learn", "spec"];
+  function selectTab(name, focus) {
+    TABS.forEach((t) => {
+      const on = t === name;
+      const tab = $("#tab-" + t);
+      tab.setAttribute("aria-selected", on);
+      tab.tabIndex = on ? 0 : -1;
+      $("#view-" + t).hidden = !on;
+      if (on && focus) tab.focus();
+    });
+    if (name === "learn") { renderDash(); renderExamples(); renderEvents(); }
+    window.scrollTo({ top: 0 });
+  }
+  TABS.forEach((t, i) => {
+    const tab = $("#tab-" + t);
+    tab.addEventListener("click", () => selectTab(t));
+    tab.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowRight") selectTab(TABS[(i + 1) % TABS.length], true);
+      if (e.key === "ArrowLeft") selectTab(TABS[(i + TABS.length - 1) % TABS.length], true);
+    });
+  });
+
+  $("#chart-toggle").addEventListener("click", (e) => {
+    state.tableView = !state.tableView;
+    e.currentTarget.setAttribute("aria-pressed", state.tableView);
+    e.currentTarget.textContent = state.tableView ? "Chart" : "Table";
+    $("#bands-chart").hidden = state.tableView;
+    $("#bands-table").hidden = !state.tableView;
+  });
+  $("#view-learn").querySelectorAll(".seg button").forEach((b) => b.addEventListener("click", () => { state.range = +b.dataset.range; renderDash(); }));
+  let rz;
+  window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { if (!$("#view-learn").hidden) renderDash(); }, 150); });
+
+  $("#queue").addEventListener("click", (e) => {
+    const b = e.target.closest(".qitem");
+    if (!b) return;
+    state.current = b.dataset.id; state.panel = null;
+    renderQueue(); renderDetail();
+    if (window.matchMedia("(max-width: 900px)").matches) $("#detail").scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+  $("#reset").addEventListener("click", () => { state = freshState(); renderAll(); });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && state.panel) { state.panel = null; renderDecision(); }
+  });
+
+  function renderAll() {
+    renderQueue(); renderDetail();
+    if (!$("#view-learn").hidden) { renderDash(); renderExamples(); }
+    renderEvents();
+  }
+
+  // Show the requested view when the link carries one (#learn, #spec)
+  const start = (location.hash || "").replace("#", "");
+  renderAll();
+  if (TABS.includes(start)) selectTab(start);
+})();
+</script>
+</body>
+</html>
