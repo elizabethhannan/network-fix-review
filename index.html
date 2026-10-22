@@ -541,6 +541,70 @@ table.data { min-width: 960px; }
 .insights { grid-template-columns: repeat(auto-fit, minmax(min(100%, 520px), 1fr)); }
 .chart .tip { white-space: normal; max-width: min(80vw, 640px); font-size: .75rem; font-family: var(--font-mono); background: var(--ink); color: var(--nm-base); box-shadow: 0 8px 24px rgba(0,0,0,.25); z-index: 5; }
 
+
+/* Network health, audit agent and agent status bar */
+#view-health { display: grid; gap: 20px; }
+#view-health[hidden], #audit-stop[hidden] { display: none !important; }
+.h-head { grid-template-columns: minmax(220px, 300px) minmax(0, 1fr); align-items: center; gap: 28px; }
+.h-score { display: grid; gap: 6px; justify-items: start; }
+.h-score .big { font-family: var(--font-mono); font-size: 3.25rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.h-score .big small { font-size: 1rem; color: var(--ink-3); font-weight: 400; margin-left: 4px; }
+.h-score .lab { font-weight: 700; }
+.h-score .counts { display: flex; flex-wrap: wrap; gap: 6px; }
+.h-act { display: grid; gap: 12px; }
+.h-act h2 { margin: 0; }
+.h-btns { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; }
+.h-agents { display: flex; flex-wrap: wrap; gap: 6px; }
+.agent-chip { font-size: .8125rem; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); color: var(--ink-2); background: var(--surface-2); }
+.agent-chip.on { border-color: var(--ai); color: var(--ai); background: var(--ai-soft); font-weight: 700; box-shadow: 0 0 0 3px color-mix(in srgb, var(--ai) 18%, transparent); }
+.st-Healthy { --st: var(--good); --st-soft: var(--good-soft); }
+.st-Watch { --st: var(--warn); --st-soft: var(--warn-soft); }
+.st-Degraded { --st: var(--crit); --st-soft: var(--crit-soft); }
+.st-Unknown { --st: var(--ai); --st-soft: var(--ai-soft); }
+.st-pill { display: inline-flex; align-items: center; gap: 5px; font-size: .8125rem; padding: 2px 9px; border-radius: 999px; color: var(--st); background: var(--st-soft); font-weight: 700; white-space: nowrap; }
+.st-pill::before { content: ""; width: .5em; height: .5em; border-radius: 50%; background: currentColor; }
+.chain { display: flex; flex-wrap: wrap; gap: 14px; align-items: stretch; }
+.layer { flex: 1 1 180px; min-width: 0; display: grid; gap: 10px; align-content: start; position: relative; }
+.layer > h3 { margin: 0; font-size: .8125rem; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); font-family: var(--font-body); }
+.layer:not(:last-child)::after { content: "→"; position: absolute; right: -12px; top: 0; color: var(--ink-3); font-size: .875rem; }
+.el { text-align: left; font: inherit; color: inherit; border: 1px solid var(--line); border-left: 4px solid var(--st); background: var(--surface); border-radius: 8px; padding: 10px 12px; display: grid; gap: 6px; cursor: pointer; min-width: 0; transition: box-shadow .2s, transform .2s; }
+.el:hover { border-color: var(--ink-3); border-left-color: var(--st); }
+.el[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--focus); }
+.el.checking { box-shadow: 0 0 0 2px var(--ai), 0 0 18px color-mix(in srgb, var(--ai) 40%, transparent); }
+.el.checking .el-top::after { content: "checking"; font-size: .75rem; color: var(--ai); font-weight: 700; font-family: var(--font-mono); animation: blink 1s ease-in-out infinite; }
+.el-top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.el-name { font-weight: 700; overflow-wrap: anywhere; }
+.el-where { font-size: .8125rem; color: var(--ink-3); }
+.el-row { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: .8125rem; color: var(--ink-2); }
+.el-meter { height: 6px; border-radius: 99px; background: var(--surface-2); overflow: hidden; }
+.el-meter i { display: block; height: 100%; background: var(--st); border-radius: inherit; transition: width .5s; }
+.h-lower { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 520px), 1fr)); gap: 20px; align-items: start; }
+.checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.checks li { display: grid; grid-template-columns: 1.6em minmax(0, 1fr); gap: 2px 8px; padding: 8px 10px; border-radius: 8px; background: var(--surface-2); }
+.checks .ic { grid-row: span 2; font-weight: 700; font-family: var(--font-mono); }
+.checks .r-pass .ic { color: var(--good); } .checks .r-warn .ic { color: var(--warn); } .checks .r-fail .ic { color: var(--crit); } .checks .r-unknown .ic { color: var(--ai); } .checks .r-pending .ic { color: var(--ink-3); }
+.checks .who { font-size: .8125rem; color: var(--ai); font-weight: 700; }
+.checks .res { font-size: .875rem; color: var(--ink-2); }
+.verdict { border-radius: 8px; padding: 12px 14px; background: var(--st-soft); display: grid; gap: 4px; }
+.verdict p { margin: 0; }
+.finds { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.finds li { border: 1px solid var(--line); border-left: 4px solid var(--st); border-radius: 8px; padding: 10px 12px; display: grid; gap: 6px; }
+.finds .f-top { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+.finds .f-act { display: flex; flex-wrap: wrap; gap: 8px; }
+.oklist { margin: 0; padding-left: 18px; color: var(--ink-2); font-size: .9375rem; }
+body { padding-bottom: 72px; }
+.agentbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 10px max(16px, calc((100vw - 1840px) / 2 + 16px)); background: color-mix(in srgb, var(--surface) 88%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-top: 1px solid var(--line); font-size: .9375rem; }
+.agentbar .ab-dot { width: .6em; height: .6em; border-radius: 50%; background: var(--ink-3); }
+.agentbar.busy .ab-dot { background: var(--ai); animation: blink 1s ease-in-out infinite; }
+.agentbar.done .ab-dot { background: var(--good); }
+.agentbar .ab-k { font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); font-weight: 700; }
+.agentbar #ab-agent { color: var(--ai); }
+.agentbar #ab-test { min-width: 0; flex: 1 1 260px; overflow-wrap: anywhere; }
+.ab-prog { display: inline-flex; align-items: center; gap: 8px; font-size: .8125rem; color: var(--ink-3); }
+.ab-trk { width: 140px; height: 6px; border-radius: 99px; background: var(--surface-2); overflow: hidden; }
+.ab-trk i { display: block; height: 100%; width: 0; background: var(--ai); transition: width .3s; }
+@media (max-width: 760px) { .h-head { grid-template-columns: minmax(0, 1fr); } .layer:not(:last-child)::after { display: none; } .ab-trk { width: 90px; } }
+
 /* Reflow rules (kept from the 2x layout) */
 .review { grid-template-columns: minmax(440px, 560px) minmax(0, 1fr) !important; }
 .cols { grid-template-columns: minmax(0, 1fr) !important; }
@@ -668,14 +732,14 @@ table.data { min-width: 960px; }
     <div class="tags">
       <span class="live"><i></i>Telemetry streaming · simulated</span>
       <span class="tag">Simulated network · example data</span>
-      <span class="tag">Self-initiated concept · Elizabeth Hannan</span>
     </div>
   </div>
 </header>
 <div class="tabbar">
   <div class="wrap">
     <nav class="tabs" role="tablist" aria-label="Views">
-      <button class="tab" role="tab" id="tab-review" aria-controls="view-review" aria-selected="true">Review</button>
+      <button class="tab" role="tab" id="tab-health" aria-controls="view-health" aria-selected="true">Network health</button>
+      <button class="tab" role="tab" id="tab-review" aria-controls="view-review" aria-selected="false" tabindex="-1">Review</button>
       <button class="tab" role="tab" id="tab-learn" aria-controls="view-learn" aria-selected="false" tabindex="-1">What the model learns</button>
       <button class="tab" role="tab" id="tab-spec" aria-controls="view-spec" aria-selected="false" tabindex="-1">Telemetry spec</button>
     </nav>
@@ -683,7 +747,31 @@ table.data { min-width: 960px; }
 </div>
 
 <main class="wrap">
-  <section class="view" id="view-review" role="tabpanel" aria-labelledby="tab-review">
+  <section class="view" id="view-health" role="tabpanel" aria-labelledby="tab-health">
+    <div class="h-head card">
+      <div class="h-score" id="h-score"></div>
+      <div class="h-act">
+        <h2>Network health</h2>
+        <p class="sub">An audit agent walks the chain from the carriers to the endpoints, runs checks on every element and reports what is likely working and what is not up to par. Verdicts are likely, not certain; each one shows its checks and confidence.</p>
+        <div class="h-btns">
+          <button class="btn primary" id="audit-run" type="button">Audit the network</button>
+          <button class="btn" id="audit-stop" type="button" hidden>Stop audit</button>
+          <span class="logged" id="audit-last">Not audited yet. Status shown is from routine monitoring.</span>
+        </div>
+        <div class="h-agents" id="h-agents" aria-label="Audit agents"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>The chain, carriers to endpoints</h2>
+      <div class="chain" id="chain" aria-label="Network elements in order"></div>
+    </div>
+    <div class="h-lower">
+      <div class="card" id="h-detail" aria-live="polite"></div>
+      <div class="card" id="h-findings"></div>
+    </div>
+  </section>
+
+  <section class="view" id="view-review" role="tabpanel" aria-labelledby="tab-review" hidden>
     <div class="review">
       <div class="queue" aria-label="Recommendations">
         <div class="queue-head"><h2>Recommendations</h2><span id="queue-count"></span></div>
@@ -1942,8 +2030,194 @@ table.data { min-width: 960px; }
     const lv = $("#live"); if (lv) drawLive(lv, r);
   }
 
+
+  // ---------- Network health and audit agent (simulated) ----------
+  const AGENTS = ["Audit lead", "Reachability agent", "Performance agent", "Config agent", "Radio agent", "Path agent", "Security agent"];
+  const LAYERS = ["Edge", "WAN", "Campus core", "Access", "Services", "Endpoints"];
+  // mon = what routine monitoring shows before an audit; checks + verdict = what the audit finds
+  const ELEMENTS = [
+    { id: "carrier", layer: "Edge", name: "Carrier links", where: "2 carriers · HQ and branches", mon: { score: 93, status: "Healthy" },
+      checks: [["Reachability agent", "BGP sessions to both carriers", "pass", "4 of 4 sessions up"],
+               ["Path agent", "Hop-by-hop loss, Seattle to Portland exchange", "fail", "2.1% loss at one carrier hop at peak"],
+               ["Performance agent", "Latency to cloud regions", "pass", "28 ms median, normal"]],
+      v: { status: "Degraded", score: 66, conf: 0.74, rec: "R-1046", likely: "One carrier hop between Seattle and the Portland exchange is likely dropping packets. The other carrier paths look normal." } },
+    { id: "fw", layer: "Edge", name: "Edge firewalls", where: "HQ · HA pair", mon: { score: 96, status: "Healthy" },
+      checks: [["Reachability agent", "HA heartbeat between the pair", "pass", "In sync, 0 failovers in 30 days"],
+               ["Performance agent", "Session table use", "pass", "41% of capacity"],
+               ["Config agent", "Policy against approved baseline", "pass", "No drift"],
+               ["Security agent", "Threat feed freshness", "pass", "Updated 14 minutes ago"]],
+      v: { status: "Healthy", score: 96, conf: 0.9, likely: "Working as expected." } },
+    { id: "sdwan", layer: "WAN", name: "SD-WAN hub", where: "HQ", mon: { score: 94, status: "Healthy" },
+      checks: [["Reachability agent", "Tunnels to branches", "pass", "6 of 6 up"],
+               ["Performance agent", "CPU and memory", "pass", "CPU 38%, memory 52%"],
+               ["Config agent", "Firmware and advisories", "pass", "Current release, no advisories"]],
+      v: { status: "Healthy", score: 94, conf: 0.88, likely: "Working as expected." } },
+    { id: "phx", layer: "WAN", name: "Phoenix uplink", where: "Phoenix branch · WAN", mon: { score: 88, status: "Healthy" },
+      checks: [["Reachability agent", "Link state", "pass", "Up, no flaps"],
+               ["Performance agent", "Peak use, last six Thursdays", "warn", "91% last week, 94% forecast Thursday 10:00 to 12:00"],
+               ["Performance agent", "Scheduled jobs during the peak", "warn", "Nightly backup takes 38% of the link in that window"]],
+      v: { status: "Watch", score: 74, conf: 0.71, rec: "R-1043", likely: "Likely to saturate on Thursday morning when the backup overlaps the peak. Fine the rest of the week." } },
+    { id: "sea", layer: "WAN", name: "Seattle WAN", where: "Seattle branch · WAN", mon: { score: 70, status: "Watch" },
+      checks: [["Reachability agent", "Link state", "pass", "Up, no flaps"],
+               ["Performance agent", "Packet loss, last 24 hours", "fail", "1.7% now, swinging 0.8% to 3.1%"],
+               ["Performance agent", "Voice jitter", "warn", "41 ms, typical under 20 ms"],
+               ["Path agent", "Where the loss starts", "warn", "Upstream of the branch router"]],
+      v: { status: "Degraded", score: 61, conf: 0.66, rec: "R-1046", likely: "The loss likely starts upstream at the carrier, not in the branch router itself." } },
+    { id: "core", layer: "Campus core", name: "Core switches", where: "HQ · pair", mon: { score: 97, status: "Healthy" },
+      checks: [["Reachability agent", "Both members reachable", "pass", "2 of 2"],
+               ["Performance agent", "CPU and uplink errors", "pass", "CPU 22%, 0 errors"],
+               ["Config agent", "Config against golden copy", "pass", "No drift"]],
+      v: { status: "Healthy", score: 97, conf: 0.92, likely: "Working as expected." } },
+    { id: "dist", layer: "Campus core", name: "Distribution switches", where: "Buildings A to C · 6 switches", mon: { score: 95, status: "Healthy" },
+      checks: [["Reachability agent", "All members reachable", "pass", "6 of 6"],
+               ["Performance agent", "CPU and errors", "pass", "CPU under 30%, 0 errors"],
+               ["Config agent", "Saved versus running config", "warn", "1 unsaved change on dist-B2"]],
+      v: { status: "Healthy", score: 88, conf: 0.85, likely: "Working. One switch has an unsaved change that a reboot would lose." } },
+    { id: "access", layer: "Access", name: "Access switches", where: "HQ · 48 switches", mon: { score: 90, status: "Healthy" },
+      checks: [["Reachability agent", "All switches reachable", "pass", "48 of 48"],
+               ["Performance agent", "Memory trend, 14 days", "fail", "12 switches at 80% and climbing; 90% in about 3 days"],
+               ["Config agent", "Firmware against vendor advisories", "fail", "12 on 17.9.4, which has a published memory leak"]],
+      v: { status: "Degraded", score: 58, conf: 0.93, rec: "R-1044", likely: "12 switches are likely leaking memory from a known firmware bug and will fail within about three days if not upgraded." } },
+    { id: "wlc", layer: "Access", name: "Wireless controller", where: "HQ", mon: { score: 95, status: "Healthy" },
+      checks: [["Reachability agent", "Controller and AP join status", "pass", "212 of 212 access points joined"],
+               ["Performance agent", "CPU and memory", "pass", "CPU 31%, memory 48%"],
+               ["Config agent", "Firmware", "pass", "Current release"]],
+      v: { status: "Healthy", score: 95, conf: 0.9, likely: "Working as expected." } },
+    { id: "ap", layer: "Access", name: "Floor 3 access points", where: "Building B · floor 3 · 3 APs", mon: { score: 62, status: "Degraded" },
+      checks: [["Reachability agent", "Access points up", "pass", "3 of 3"],
+               ["Radio agent", "Retry rate on channel 36", "fail", "18.4%, typical 4.1%"],
+               ["Radio agent", "Networks sharing channel 36", "warn", "3 nearby, typical 0"],
+               ["Performance agent", "Help-desk tickets about Wi-Fi", "warn", "12 in 24 hours, typical 1 a day"]],
+      v: { status: "Degraded", score: 55, conf: 0.86, rec: "R-1042", likely: "Likely interference from a new neighbor network on channel 36." } },
+    { id: "dns", layer: "Services", name: "DNS and DHCP", where: "HQ · 2 servers", mon: { score: 94, status: "Healthy" },
+      checks: [["Reachability agent", "Both servers answering", "pass", "2 of 2"],
+               ["Performance agent", "Query latency and scope use", "pass", "4 ms; DHCP scope 71% used"],
+               ["Security agent", "Query bursts by host", "warn", "One host sending 20 times its normal rate"]],
+      v: { status: "Healthy", score: 87, conf: 0.84, likely: "Working. One host is sending far more queries than usual (see Endpoints)." } },
+    { id: "flow", layer: "Services", name: "Flow collector", where: "Seattle branch · NetFlow", mon: { score: 91, status: "Healthy" },
+      checks: [["Reachability agent", "Collector reachable", "pass", "Up, disk 40% used"],
+               ["Performance agent", "Flow records received, last 6 hours", "unknown", "No records from Seattle since 07:10"]],
+      v: { status: "Unknown", score: null, conf: 0.55, likely: "The collector is up but receives no data from Seattle, so Seattle traffic cannot be fully checked. Likely flow export is off on the branch router.", fix: "Turn flow export back on at the Seattle router" } },
+    { id: "ep", layer: "Endpoints", name: "Workstations", where: "HQ · 1,240 devices", mon: { score: 92, status: "Healthy" },
+      checks: [["Reachability agent", "Devices seen in the last hour", "pass", "1,212 of 1,240"],
+               ["Security agent", "Unusual traffic by host", "warn", "10.20.4.17: 248 DNS queries a minute, 20 times normal"],
+               ["Security agent", "Known software on that host", "warn", "Backup agent installed; 40% of patterns like this are backup software"]],
+      v: { status: "Watch", score: 72, conf: 0.58, rec: "R-1045", likely: "One workstation is behaving oddly. Likely a misbehaving backup agent rather than an attack, but not confirmed." } }
+  ];
+  const ST_LABEL = { Healthy: "Healthy", Watch: "Watch", Degraded: "Not up to par", Unknown: "Can't verify" };
+  const ST_RANK = { Degraded: 0, Unknown: 1, Watch: 2, Healthy: 3 };
+  const RES_ICON = { pass: "✓", warn: "!", fail: "✕", unknown: "?", pending: "·" };
+  let audit = { running: false, stop: false, done: false, results: {}, current: null, agent: null, sel: "carrier", corrected: {}, at: null };
+  const stOf = (s) => "st-" + s;
+  const shown = (e) => (audit.results[e.id] && audit.results[e.id].done ? e.v : null);
+  function elStatus(e) { const v = shown(e); return v ? { status: v.status, score: v.score } : e.mon; }
+  function overall() {
+    const vals = ELEMENTS.map(elStatus).filter((x) => x.score != null);
+    const score = Math.round(vals.reduce((a, b) => a + b.score, 0) / vals.length);
+    const counts = {}; ELEMENTS.forEach((e) => { const s = elStatus(e).status; counts[s] = (counts[s] || 0) + 1; });
+    return { score, counts, status: score >= 85 ? "Healthy" : score >= 72 ? "Watch" : "Degraded" };
+  }
+  function renderScore() {
+    const o = overall();
+    $("#h-score").innerHTML = `<span class="logged">${audit.done ? "Overall health, after audit" : "Overall health, from monitoring"}</span>
+      <span class="big ${stOf(o.status)}" style="color:var(--st)">${o.score}<small>/ 100</small></span>
+      <span class="st-pill ${stOf(o.status)}">${ST_LABEL[o.status]}</span>
+      <span class="counts">${["Degraded", "Unknown", "Watch", "Healthy"].filter((k) => o.counts[k]).map((k) => `<span class="st-pill ${stOf(k)}">${o.counts[k]} ${ST_LABEL[k].toLowerCase()}</span>`).join("")}</span>`;
+    $("#h-agents").innerHTML = AGENTS.map((a) => `<span class="agent-chip${audit.running && audit.agent === a ? " on" : ""}">${esc(a)}</span>`).join("");
+  }
+  function renderChain() {
+    $("#chain").innerHTML = LAYERS.map((L) => `<div class="layer"><h3>${esc(L)}</h3>${ELEMENTS.filter((e) => e.layer === L).map((e) => {
+      const s = elStatus(e), res = audit.results[e.id];
+      const tag = res && res.done ? `${Math.round(e.v.conf * 100)}% sure` : res ? "Auditing" : "Not audited";
+      return `<button class="el ${stOf(s.status)}${audit.current === e.id ? " checking" : ""}" type="button" data-el="${e.id}" aria-pressed="${audit.sel === e.id}">
+        <span class="el-top"><span class="el-name">${esc(e.name)}</span></span>
+        <span class="el-where">${esc(e.where)}</span>
+        <span class="el-meter" aria-hidden="true"><i style="width:${s.score == null ? 0 : s.score}%"></i></span>
+        <span class="el-row"><span class="st-pill ${stOf(s.status)}">${ST_LABEL[s.status]}</span><span class="mono">${s.score == null ? "–" : s.score}</span><span>${tag}</span></span>
+      </button>`; }).join("")}</div>`).join("");
+  }
+  function renderHDetail() {
+    const e = ELEMENTS.find((x) => x.id === audit.sel), res = audit.results[e.id], s = elStatus(e);
+    const done = res ? res.checks.length : 0;
+    const items = e.checks.map((c, i) => {
+      const r = i < done ? c[2] : (audit.current === e.id && i === done ? "pending" : null);
+      if (!r) return `<li class="r-pending"><span class="ic">${RES_ICON.pending}</span><span class="who">${esc(c[0])}</span><span class="res">${esc(c[1])} · not run yet</span></li>`;
+      return `<li class="r-${r}"><span class="ic">${RES_ICON[r]}</span><span class="who">${esc(c[0])} · ${esc(c[1])}</span><span class="res">${r === "pending" ? "Running now…" : esc(c[3])}</span></li>`;
+    }).join("");
+    const v = shown(e);
+    $("#h-detail").innerHTML = `<h2>${esc(e.name)} <span class="st-pill ${stOf(s.status)}">${ST_LABEL[s.status]}</span></h2>
+      <p class="sub">${esc(e.layer)} · ${esc(e.where)}</p>
+      ${v ? `<div class="verdict ${stOf(v.status)}"><p><b>Audit verdict:</b> ${esc(v.likely)}</p><p class="logged">${Math.round(v.conf * 100)}% sure · ${res.checks.length} checks</p></div>`
+          : `<p class="note">${res ? "The audit is checking this element now." : `Routine monitoring shows ${esc(ST_LABEL[e.mon.status].toLowerCase())} (${e.mon.score}). Run the audit to check it directly.`}</p>`}
+      <ul class="checks">${items}</ul>`;
+  }
+  function renderFindings() {
+    const box = $("#h-findings");
+    if (!audit.done) { box.innerHTML = `<h2>Audit findings</h2><p class="note">${audit.running ? "Findings appear here as each element finishes." : "No audit yet. Monitoring alone flags 2 elements; the audit checks all 13 and often finds more."}</p>`; return; }
+    const bad = ELEMENTS.filter((e) => audit.results[e.id] && audit.results[e.id].done && e.v.status !== "Healthy").sort((a, b) => ST_RANK[a.v.status] - ST_RANK[b.v.status] || (a.v.score ?? 0) - (b.v.score ?? 0));
+    const ok = ELEMENTS.filter((e) => audit.results[e.id] && audit.results[e.id].done && e.v.status === "Healthy");
+    box.innerHTML = `<h2>Not up to par (${bad.length})</h2>
+      <ul class="finds">${bad.map((e) => `<li class="${stOf(e.v.status)}">
+        <span class="f-top"><b>${esc(e.name)}</b><span class="st-pill ${stOf(e.v.status)}">${ST_LABEL[e.v.status]}</span><span class="logged">${Math.round(e.v.conf * 100)}% sure</span></span>
+        <span>${esc(e.v.likely)}</span>
+        <span class="f-act">${e.v.rec ? `<button class="btn small primary" type="button" data-rec="${e.v.rec}">Open fix ${e.v.rec}</button>` : e.v.fix ? `<span class="logged">Suggested: ${esc(e.v.fix)}</span>` : ""}
+          ${audit.corrected[e.id] ? `<span class="logged">Sent as a correction to the audit model</span>` : `<button class="btn small" type="button" data-wrong="${e.id}">This verdict is wrong</button>`}</span>
+      </li>`).join("")}</ul>
+      <h2>Working (${ok.length})</h2>
+      <ul class="oklist">${ok.map((e) => `<li>${esc(e.name)} · ${esc(e.v.likely)}</li>`).join("")}</ul>`;
+  }
+  function setBar(agent, text, step, pct, mode) {
+    const bar = $("#agentbar");
+    bar.classList.toggle("busy", mode === "busy"); bar.classList.toggle("done", mode === "done");
+    $("#ab-agent").textContent = agent; $("#ab-test").textContent = text;
+    $("#ab-step").textContent = step || ""; $("#ab-bar").style.width = (pct || 0) + "%";
+  }
+  function renderHealth() { renderScore(); renderChain(); renderHDetail(); renderFindings(); }
+  const nap = (ms) => new Promise((r) => setTimeout(r, ms));
+  async function runAudit() {
+    if (audit.running) return;
+    audit = { running: true, stop: false, done: false, results: {}, current: null, agent: "Audit lead", sel: ELEMENTS[0].id, corrected: {}, at: null };
+    $("#audit-run").disabled = true; $("#audit-stop").hidden = false;
+    const total = ELEMENTS.reduce((a, e) => a + e.checks.length, 0); let n = 0;
+    emit("audit_started", { elements: ELEMENTS.length, checks: total });
+    setBar("Audit lead", `Planning the route: ${ELEMENTS.length} elements across ${LAYERS.length} layers, carriers first`, "Step 0 of " + total, 0, "busy");
+    renderHealth(); await nap(DUR(700) || 60);
+    for (const e of ELEMENTS) {
+      if (audit.stop) break;
+      audit.current = e.id; audit.sel = e.id; audit.results[e.id] = { checks: [], done: false };
+      for (const c of e.checks) {
+        if (audit.stop) break;
+        audit.agent = c[0];
+        setBar(c[0], `${e.name} (${e.where}) · ${c[1]}`, `Element ${ELEMENTS.indexOf(e) + 1} of ${ELEMENTS.length} · check ${n + 1} of ${total}`, Math.round((n / total) * 100), "busy");
+        renderHealth(); await nap(DUR(520) || 40);
+        audit.results[e.id].checks.push(c[2]); n++;
+      }
+      if (audit.stop) break;
+      audit.results[e.id].done = true;
+      emit("element_audited", { element: e.id, verdict: e.v.status, confidence: e.v.conf });
+    }
+    audit.running = false; audit.current = null; audit.agent = null; audit.done = true; audit.at = clock();
+    const bad = ELEMENTS.filter((e) => audit.results[e.id] && audit.results[e.id].done && e.v.status !== "Healthy").length;
+    const checked = ELEMENTS.filter((e) => audit.results[e.id] && audit.results[e.id].done).length;
+    emit(audit.stop ? "audit_stopped" : "audit_finished", { elements_checked: checked, not_up_to_par: bad });
+    setBar("Audit lead", audit.stop ? `Stopped. ${checked} of ${ELEMENTS.length} elements checked, ${bad} not up to par.` : `Audit complete. ${checked} elements checked, ${bad} not up to par. Most urgent first in the findings.`, `${n} of ${total} checks`, audit.stop ? Math.round((n / total) * 100) : 100, "done");
+    $("#audit-last").textContent = `Last audit ${audit.at}${audit.stop ? " (stopped early)" : ""}. Verdicts are likely, not certain.`;
+    $("#audit-run").disabled = false; $("#audit-run").textContent = "Audit again"; $("#audit-stop").hidden = true;
+    const first = ELEMENTS.find((e) => audit.results[e.id] && audit.results[e.id].done && e.v.status === "Degraded");
+    if (first) audit.sel = first.id;
+    renderHealth();
+  }
+  $("#audit-run").addEventListener("click", runAudit);
+  $("#audit-stop").addEventListener("click", () => { audit.stop = true; });
+  $("#chain").addEventListener("click", (e) => { const b = e.target.closest("[data-el]"); if (!b) return; audit.sel = b.dataset.el; renderChain(); renderHDetail(); });
+  $("#h-findings").addEventListener("click", (e) => {
+    const r = e.target.closest("[data-rec]"), w = e.target.closest("[data-wrong]");
+    if (r) { state.current = r.dataset.rec; state.panel = null; renderQueue(); renderDetail(); selectTab("review"); }
+    if (w) { audit.corrected[w.dataset.wrong] = true; emit("audit_verdict_corrected", { element: w.dataset.wrong }); renderFindings(); }
+  });
+
   // ---------- Tabs ----------
-  const TABS = ["review", "learn", "spec"];
+  const TABS = ["health", "review", "learn", "spec"];
   function selectTab(name, focus) {
     TABS.forEach((t) => {
       const on = t === name;
@@ -1955,6 +2229,7 @@ table.data { min-width: 960px; }
     });
     if (name === "learn") { renderDash(); renderExamples(); renderEvents(); }
     if (name === "review") requestAnimationFrame(drawDetailViz);
+    if (name === "health") renderHealth();
     window.scrollTo({ top: 0 });
   }
   TABS.forEach((t, i) => {
@@ -1990,7 +2265,7 @@ table.data { min-width: 960px; }
   });
 
   function renderAll() {
-    renderQueue(); renderDetail();
+    renderQueue(); renderDetail(); renderHealth();
     if (!$("#view-learn").hidden) { renderDash(); renderExamples(); }
     renderEvents();
   }
@@ -2104,5 +2379,11 @@ table.data { min-width: 960px; }
   mo.observe(document.body, { childList: true, subtree: true });
 })();
 </script>
+<div class="agentbar" id="agentbar" role="status" aria-live="polite" aria-atomic="true">
+  <span class="ab-dot" aria-hidden="true"></span>
+  <span class="ab-k">Agent</span><b id="ab-agent">Audit lead</b>
+  <span class="ab-k">Testing</span><span id="ab-test">Idle. Press Audit the network to start.</span>
+  <span class="ab-prog"><span id="ab-step" class="mono"></span><span class="ab-trk"><i id="ab-bar"></i></span></span>
+</div>
 </body>
 </html>
