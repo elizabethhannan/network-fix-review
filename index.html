@@ -605,6 +605,10 @@ body { padding-bottom: 72px; }
 .ab-trk i { display: block; height: 100%; width: 0; background: var(--ai); transition: width .3s; }
 @media (max-width: 760px) { .h-head { grid-template-columns: minmax(0, 1fr); } .layer:not(:last-child)::after { display: none; } .ab-trk { width: 90px; } }
 
+.refs .reflist { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.refs .reflist li { padding-left: 2em; text-indent: -2em; font-size: .9375rem; color: var(--ink-2); overflow-wrap: anywhere; }
+.refs .reflist a { color: var(--s1); }
+.refs .ref-agent { display: inline-block; text-indent: 0; margin-right: 8px; font-size: .75rem; font-weight: 700; color: var(--ai); background: var(--ai-soft); border-radius: 999px; padding: 1px 8px; vertical-align: .1em; }
 /* Reflow rules (kept from the 2x layout) */
 .review { grid-template-columns: minmax(440px, 560px) minmax(0, 1fr) !important; }
 .cols { grid-template-columns: minmax(0, 1fr) !important; }
@@ -738,16 +742,17 @@ body { padding-bottom: 72px; }
 <div class="tabbar">
   <div class="wrap">
     <nav class="tabs" role="tablist" aria-label="Views">
-      <button class="tab" role="tab" id="tab-health" aria-controls="view-health" aria-selected="true">Network health</button>
-      <button class="tab" role="tab" id="tab-review" aria-controls="view-review" aria-selected="false" tabindex="-1">Review</button>
+      <button class="tab" role="tab" id="tab-review" aria-controls="view-review" aria-selected="true">Review</button>
+      <button class="tab" role="tab" id="tab-health" aria-controls="view-health" aria-selected="false" tabindex="-1">Network health</button>
       <button class="tab" role="tab" id="tab-learn" aria-controls="view-learn" aria-selected="false" tabindex="-1">What the model learns</button>
+      <button class="tab" role="tab" id="tab-agents" aria-controls="view-agents" aria-selected="false" tabindex="-1">Agents</button>
       <button class="tab" role="tab" id="tab-spec" aria-controls="view-spec" aria-selected="false" tabindex="-1">Telemetry spec</button>
     </nav>
   </div>
 </div>
 
 <main class="wrap">
-  <section class="view" id="view-health" role="tabpanel" aria-labelledby="tab-health">
+  <section class="view" id="view-health" role="tabpanel" aria-labelledby="tab-health" hidden>
     <div class="h-head card">
       <div class="h-score" id="h-score"></div>
       <div class="h-act">
@@ -771,7 +776,7 @@ body { padding-bottom: 72px; }
     </div>
   </section>
 
-  <section class="view" id="view-review" role="tabpanel" aria-labelledby="tab-review" hidden>
+  <section class="view" id="view-review" role="tabpanel" aria-labelledby="tab-review">
     <div class="review">
       <div class="queue" aria-label="Recommendations">
         <div class="queue-head"><h2>Recommendations</h2><span id="queue-count"></span></div>
@@ -857,6 +862,34 @@ body { padding-bottom: 72px; }
     </div>
   </section>
 
+  <section class="view" id="view-agents" role="tabpanel" aria-labelledby="tab-agents" hidden>
+    <p class="lead">Every agent on this page, where it runs, what it does and whether it is running right now. No agent can change the network on its own; a person approves every change.</p>
+    <div class="card">
+      <h2>Agents</h2>
+      <div class="table-scroll"><table class="data" id="agents-table"></table></div>
+    </div>
+    <div class="card" style="margin-top: 20px">
+      <h2>Definitions</h2>
+      <div class="table-scroll">
+        <table class="data">
+          <thead><tr><th scope="col">Term</th><th scope="col">Meaning</th></tr></thead>
+          <tbody>
+            <tr><td>Element</td><td>One part of the network chain, such as a switch group, a WAN link or a service.</td></tr>
+            <tr><td>Check</td><td>One test an agent runs on an element, such as reachability, memory trend or firmware against advisories.</td></tr>
+            <tr><td>Verdict</td><td>The audit's likely conclusion for an element: Healthy, Watch, Not up to par or Can't verify.</td></tr>
+            <tr><td>Watch</td><td>Working now but trending toward a problem.</td></tr>
+            <tr><td>Not up to par</td><td>A check failed and the element is likely hurting users or will soon.</td></tr>
+            <tr><td>Can't verify</td><td>The agent lacks the data to judge, so it says so instead of guessing.</td></tr>
+            <tr><td>Confidence</td><td>How sure the agent is, from 0 to 100%. A verdict is likely, not certain.</td></tr>
+            <tr><td>Hand-off</td><td>One agent passes its proposal to another agent to check independently.</td></tr>
+            <tr><td>Hand-back</td><td>The agent returns the decision to the operator, who approves, edits or rejects it.</td></tr>
+            <tr><td>Correction</td><td>An operator marks a verdict or fix as wrong; it becomes a training example.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
   <section class="view" id="view-spec" role="tabpanel" aria-labelledby="tab-spec" hidden>
     <p class="lead">The telemetry is designed backwards from what operators are trying to do. Each goal gets a measure, and each measure tells the model team something specific.</p>
     <div class="card">
@@ -906,6 +939,27 @@ body { padding-bottom: 72px; }
         <div class="pattern"><b>Verify, then keep or roll back</b><span>After a fix, the metric is watched and a one-step rollback stays open.</span></div>
       </div>
     </div>
+  </section>
+
+  <section class="card refs" aria-labelledby="refs-h" style="margin-top: 20px">
+    <h2 id="refs-h">Sources for the agent build</h2>
+    <p class="sub">Live data feeds and protocol standards the audit agents could draw on in a production build. The data on this page is simulated. References in APA 7.</p>
+    <ol class="reflist">
+          <li><span class="ref-agent">Path agent</span>Almes, G., Kalidindi, S., Zekauskas, M., &amp; Morton, A. (Ed.). (2016). <i>A one-way loss metric for IP performance metrics (IPPM)</i> (RFC 7680). Internet Engineering Task Force. <a href="https://www.rfc-editor.org/rfc/rfc7680" rel="noopener" target="_blank">https://www.rfc-editor.org/rfc/rfc7680</a></li>
+          <li><span class="ref-agent">Performance agent</span>Claise, B., Trammell, B., &amp; Aitken, P. (2013). <i>Specification of the IP Flow Information Export (IPFIX) protocol for the exchange of flow information</i> (RFC 7011). Internet Engineering Task Force. <a href="https://www.rfc-editor.org/rfc/rfc7011" rel="noopener" target="_blank">https://www.rfc-editor.org/rfc/rfc7011</a></li>
+          <li><span class="ref-agent">Config agent</span>Cisco DevNet. (n.d.). <i>PSIRT openVuln API</i> [API documentation]. Retrieved October 22, 2026, from  <a href="https://developer.cisco.com/docs/psirt/" rel="noopener" target="_blank">https://developer.cisco.com/docs/psirt/</a></li>
+          <li><span class="ref-agent">Path agent</span>Cisco ThousandEyes. (n.d.). <i>Internet outages map</i> [Data set]. Retrieved October 22, 2026, from  <a href="https://www.thousandeyes.com/outages/" rel="noopener" target="_blank">https://www.thousandeyes.com/outages/</a></li>
+          <li><span class="ref-agent">Path agent</span>Cloudflare. (n.d.). <i>Cloudflare Radar</i> [Data set]. Retrieved October 22, 2026, from  <a href="https://radar.cloudflare.com/" rel="noopener" target="_blank">https://radar.cloudflare.com/</a></li>
+          <li><span class="ref-agent">Security agent</span>Cybersecurity and Infrastructure Security Agency. (n.d.). <i>Known exploited vulnerabilities catalog</i> [Data set]. GitHub. Retrieved October 22, 2026, from  <a href="https://github.com/cisagov/kev-data" rel="noopener" target="_blank">https://github.com/cisagov/kev-data</a></li>
+          <li><span class="ref-agent">Config agent</span>Enns, R., Bjorklund, M., Schoenwaelder, J., &amp; Bierman, A. (Eds.). (2011). <i>Network configuration protocol (NETCONF)</i> (RFC 6241). Internet Engineering Task Force. <a href="https://www.rfc-editor.org/rfc/rfc6241" rel="noopener" target="_blank">https://www.rfc-editor.org/rfc/rfc6241</a></li>
+          <li><span class="ref-agent">Reachability agent</span>Harrington, D., Presuhn, R., &amp; Wijnen, B. (2002). <i>An architecture for describing Simple Network Management Protocol (SNMP) management frameworks</i> (RFC 3411). Internet Engineering Task Force. <a href="https://www.rfc-editor.org/rfc/rfc3411" rel="noopener" target="_blank">https://www.rfc-editor.org/rfc/rfc3411</a></li>
+          <li><span class="ref-agent">Performance agent</span>International Telecommunication Union. (2003). <i>One-way transmission time</i> (ITU-T Recommendation G.114). <a href="https://www.itu.int/rec/T-REC-G.114" rel="noopener" target="_blank">https://www.itu.int/rec/T-REC-G.114</a></li>
+          <li><span class="ref-agent">Security agent</span>National Institute of Standards and Technology. (n.d.). <i>National vulnerability database</i> [Data set]. Retrieved October 22, 2026, from  <a href="https://nvd.nist.gov/" rel="noopener" target="_blank">https://nvd.nist.gov/</a></li>
+          <li><span class="ref-agent">Config agent</span>OpenConfig. (n.d.). <i>OpenConfig: Vendor-neutral, model-driven network management</i>. Retrieved October 22, 2026, from  <a href="https://www.openconfig.net/" rel="noopener" target="_blank">https://www.openconfig.net/</a></li>
+          <li><span class="ref-agent">Reachability agent</span>Rekhter, Y., Li, T., &amp; Hares, S. (Eds.). (2006). <i>A Border Gateway Protocol 4 (BGP-4)</i> (RFC 4271). Internet Engineering Task Force. <a href="https://www.rfc-editor.org/rfc/rfc4271" rel="noopener" target="_blank">https://www.rfc-editor.org/rfc/rfc4271</a></li>
+          <li><span class="ref-agent">Path agent</span>RIPE NCC. (n.d.-a). <i>RIPE Atlas</i> [Data set]. Retrieved October 22, 2026, from  <a href="https://atlas.ripe.net/" rel="noopener" target="_blank">https://atlas.ripe.net/</a></li>
+          <li><span class="ref-agent">Path agent</span>RIPE NCC. (n.d.-b). <i>RIPEstat</i> [Data set]. Retrieved October 22, 2026, from  <a href="https://stat.ripe.net/" rel="noopener" target="_blank">https://stat.ripe.net/</a></li>
+    </ol>
   </section>
 
   <footer class="foot">
@@ -2172,7 +2226,7 @@ body { padding-bottom: 72px; }
     $("#ab-agent").textContent = agent; $("#ab-test").textContent = text;
     $("#ab-step").textContent = step || ""; $("#ab-bar").style.width = (pct || 0) + "%";
   }
-  function renderHealth() { renderScore(); renderChain(); renderHDetail(); renderFindings(); }
+  function renderHealth() { renderScore(); renderChain(); renderHDetail(); renderFindings(); renderAgents(); }
   const nap = (ms) => new Promise((r) => setTimeout(r, ms));
   async function runAudit() {
     if (audit.running) return;
@@ -2216,8 +2270,38 @@ body { padding-bottom: 72px; }
     if (w) { audit.corrected[w.dataset.wrong] = true; emit("audit_verdict_corrected", { element: w.dataset.wrong }); renderFindings(); }
   });
 
+
+  // ---------- Agents tab ----------
+  const AGENT_DEFS = [
+    ["Diagnosis agent", "Review", "Reads network telemetry and proposes a fix with evidence and a confidence level.", "Telemetry, flow data, past outcomes"],
+    ["Change-safety agent", "Review", "Checks each proposed fix on its own against what the diagnosis agent cannot see: change freezes, other services on the device, who must be told.", "Change calendar, device inventory, rollback history"],
+    ["Audit lead", "Network health", "Plans the audit route from carriers to endpoints, assigns each check to an agent and writes each verdict.", "Results from the other audit agents"],
+    ["Reachability agent", "Network health", "Checks that each element is up and answering: links, sessions, tunnels, members.", "SNMP, BGP session state"],
+    ["Performance agent", "Network health", "Checks load, memory, loss, latency and jitter against normal ranges and trends.", "SNMP counters, IPFIX flow records"],
+    ["Config agent", "Network health", "Compares firmware and configuration to the approved baseline and vendor advisories.", "NETCONF, OpenConfig, vendor advisories"],
+    ["Radio agent", "Network health", "Checks Wi-Fi channels, retry rates and neighboring networks.", "Wireless controller telemetry"],
+    ["Path agent", "Network health", "Traces traffic hop by hop to find where loss or delay starts, including carrier hops.", "Path traces, Internet measurement data"],
+    ["Security agent", "Network health", "Flags unusual traffic by host and checks devices against known exploited vulnerabilities.", "DNS logs, vulnerability catalogs"]
+  ];
+  function agentStatus(name, where) {
+    if (where === "Review") {
+      const n = RECS.filter((r) => A2A[r.id]).length;
+      return { cls: "p-acc", label: `Ran on ${n} recommendations` };
+    }
+    const total = ELEMENTS.reduce((a, e) => a + e.checks.filter((c) => c[0] === name).length, 0);
+    if (audit.running && audit.agent === name) return { cls: "p-wait", label: "Running now" };
+    if (audit.running) return { cls: "p-new", label: "Waiting in audit" };
+    if (audit.done) return { cls: "p-acc", label: name === "Audit lead" ? "Finished audit" : `Ran ${total} checks` };
+    return { cls: "p-new", label: "Idle" };
+  }
+  function renderAgents() {
+    const t = $("#agents-table"); if (!t) return;
+    t.innerHTML = `<thead><tr><th scope="col">Agent</th><th scope="col">Runs in</th><th scope="col">Status now</th><th scope="col">Definition</th><th scope="col">Data it uses</th><th scope="col">Can change the network</th></tr></thead>
+      <tbody>${AGENT_DEFS.map(([n, w, d, data]) => { const st = agentStatus(n, w); return `<tr><td><b>${esc(n)}</b></td><td>${esc(w)}</td><td><span class="pill ${st.cls}">${esc(st.label)}</span></td><td>${esc(d)}</td><td>${esc(data)}</td><td>No, a person approves</td></tr>`; }).join("")}</tbody>`;
+  }
+
   // ---------- Tabs ----------
-  const TABS = ["health", "review", "learn", "spec"];
+  const TABS = ["review", "health", "learn", "agents", "spec"];
   function selectTab(name, focus) {
     TABS.forEach((t) => {
       const on = t === name;
@@ -2230,6 +2314,7 @@ body { padding-bottom: 72px; }
     if (name === "learn") { renderDash(); renderExamples(); renderEvents(); }
     if (name === "review") requestAnimationFrame(drawDetailViz);
     if (name === "health") renderHealth();
+    if (name === "agents") renderAgents();
     window.scrollTo({ top: 0 });
   }
   TABS.forEach((t, i) => {
