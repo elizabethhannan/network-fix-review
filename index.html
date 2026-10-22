@@ -617,6 +617,59 @@ body { padding-bottom: 72px; }
 .refs .reflist li { padding-left: 2em; text-indent: -2em; font-size: .9375rem; color: var(--ink-2); overflow-wrap: anywhere; }
 .refs .reflist a { color: var(--s1); }
 .refs .ref-agent { display: inline-block; text-indent: 0; margin-right: 8px; font-size: .75rem; font-weight: 700; color: var(--ai); background: var(--ai-soft); border-radius: 999px; padding: 1px 8px; vertical-align: .1em; }
+
+/* Security tab */
+#view-security { display: grid; gap: 20px; }
+#view-security[hidden] { display: none; }
+.threat-tag { font: inherit; font-size: .8125rem; font-weight: 700; padding: 4px 12px; border-radius: 999px; cursor: pointer; border: 1px solid transparent; }
+.lv-High { --lv: var(--crit); --lv-soft: var(--crit-soft); }
+.lv-Elevated { --lv: var(--warn); --lv-soft: var(--warn-soft); }
+.lv-Guarded { --lv: var(--good); --lv-soft: var(--good-soft); }
+.threat-tag { color: var(--lv); background: var(--lv-soft); border-color: color-mix(in srgb, var(--lv) 35%, transparent); }
+.card.threat { border-left: 6px solid var(--lv); }
+.threat-top { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; align-items: center; }
+.threat-top h2 { margin: 2px 0 0; font-size: 1.5rem; color: var(--lv); }
+.threat-lv { padding: 6px 14px; border-radius: 999px; background: var(--lv-soft); color: var(--lv); }
+.threat-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.threat-list li { padding-left: 1.3em; position: relative; }
+.threat-list li::before { content: ""; position: absolute; left: 0; top: .5em; width: .6em; height: .6em; border-radius: 50%; }
+.threat-list li.bad::before { background: var(--crit); } .threat-list li.ok::before { background: var(--good); }
+.sec-agents { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 12px; }
+.sa { border: 1px solid var(--line); border-left: 4px solid var(--good); border-radius: 8px; padding: 10px 12px; display: grid; gap: 4px; background: var(--surface); transition: box-shadow .3s; }
+.sa.alert { border-left-color: var(--crit); }
+.sa.now { box-shadow: 0 0 0 2px var(--ai), 0 0 14px color-mix(in srgb, var(--ai) 30%, transparent); }
+.sa-top { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+.sa-now { color: var(--ai); font-size: .875rem; font-weight: 700; }
+.sec-two { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 560px), 1fr)); gap: 20px; align-items: start; }
+.ord { margin: 0; } .ord svg { width: 100%; height: auto; display: block; } .ord rect { fill: color-mix(in srgb, var(--s1) 45%, transparent); } .ord rect.spk { fill: var(--crit); }
+.split { display: flex; height: 22px; border-radius: 6px; overflow: hidden; font-size: .75rem; font-weight: 700; color: #fff; }
+.split i { font-style: normal; display: flex; align-items: center; padding: 0 6px; white-space: nowrap; overflow: hidden; }
+.split .b { background: var(--crit); } .split .e { background: var(--s1); } .split .u { background: var(--ink-3); }
+.hyps { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 10px; }
+.hyp { border: 1px solid var(--line); border-radius: 8px; padding: 10px; display: grid; gap: 6px; align-content: start; }
+.hyp ul { margin: 0; padding-left: 16px; font-size: .875rem; color: var(--ink-2); }
+.hyp-top { display: flex; justify-content: space-between; }
+.h-bot { --st: var(--crit); } .h-err { --st: var(--s1); } .h-mal { --st: var(--ink-3); }
+.done-act { margin-right: 10px; display: inline-flex; gap: 6px; align-items: center; color: var(--good); font-weight: 700; font-size: .875rem; }
+.done-act svg { width: 1em; height: 1em; }
+.mstats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.mstats div { display: grid; gap: 2px; padding: 10px; border-radius: 8px; background: var(--surface-2); }
+.mstats b { font-size: 1.5rem; }
+.fnd { border: 1px solid var(--line); border-left: 4px solid var(--st); border-radius: 8px; padding: 10px 12px; display: grid; gap: 6px; }
+.warn-head { display: grid; gap: 4px; }
+.warn-t td { vertical-align: top; }
+.sev { font-weight: 700; font-size: .8125rem; padding: 2px 9px; border-radius: 999px; }
+.sev-Critical .sev { color: var(--crit); background: var(--crit-soft); }
+.sev-High .sev { color: var(--warn); background: var(--warn-soft); }
+.sev-Medium .sev { color: var(--s1); background: color-mix(in srgb, var(--s1) 14%, transparent); }
+.sev-Low .sev { color: var(--ink-2); background: var(--surface-2); }
+.mfa-dlg { border: 1px solid var(--line); border-radius: 12px; padding: 22px; max-width: min(92vw, 460px); background: var(--surface); color: var(--ink); }
+.mfa-dlg::backdrop { background: rgba(10, 20, 30, .45); }
+.mfa-dlg h3 { margin: 4px 0 8px; }
+.mfa-num { display: flex; align-items: center; gap: 12px; margin: 12px 0 16px; padding: 10px 12px; border-radius: 8px; background: var(--ai-soft); }
+.mfa-num b { font-size: 2rem; color: var(--ai); }
+.toast { position: fixed; right: 16px; top: 16px; z-index: 60; max-width: min(92vw, 420px); padding: 12px 16px; border-radius: 10px; background: var(--ink); color: var(--bg); box-shadow: 0 10px 30px rgba(0,0,0,.25); font-weight: 700; }
+.toast[hidden] { display: none; }
 /* Reflow rules (kept from the 2x layout) */
 .review { grid-template-columns: minmax(440px, 560px) minmax(0, 1fr) !important; }
 .cols { grid-template-columns: minmax(0, 1fr) !important; }
@@ -744,6 +797,7 @@ body { padding-bottom: 72px; }
     <div class="tags">
       <span class="live"><i></i>Telemetry streaming · simulated</span>
       <span class="tag">Simulated network · example data</span>
+      <button class="threat-tag" id="threat-tag" type="button">Threat level</button>
     </div>
   </div>
 </header>
@@ -754,6 +808,7 @@ body { padding-bottom: 72px; }
       <button class="tab" role="tab" id="tab-health" aria-controls="view-health" aria-selected="false" tabindex="-1">Network health</button>
       <button class="tab" role="tab" id="tab-learn" aria-controls="view-learn" aria-selected="false" tabindex="-1">What the model learns</button>
       <button class="tab" role="tab" id="tab-agents" aria-controls="view-agents" aria-selected="false" tabindex="-1">Agents</button>
+      <button class="tab" role="tab" id="tab-security" aria-controls="view-security" aria-selected="false" tabindex="-1">Security</button>
       <button class="tab" role="tab" id="tab-spec" aria-controls="view-spec" aria-selected="false" tabindex="-1">Telemetry spec</button>
     </nav>
   </div>
@@ -877,6 +932,7 @@ body { padding-bottom: 72px; }
       <div class="handflow" aria-label="Hand-off order">
         <p><b>Review:</b> <span class="hf">Network telemetry</span> → <span class="hf a">1 Diagnosis</span> → <span class="hf a">2 Change-safety</span> → <span class="hf op">Operator decides</span></p>
         <p><b>Audit, on each element:</b> <span class="hf op">Operator presses Audit</span> → <span class="hf a">1 Audit lead plans</span> → <span class="hf a">2 Reachability</span> → <span class="hf a">3 Performance, Radio or Path</span> → <span class="hf a">4 Config</span> → <span class="hf a">5 Security</span> → <span class="hf a">6 Audit lead writes verdict</span> → <span class="hf op">Operator: open fix or correct</span></p>
+        <p><b>Security, all the time:</b> <span class="hf a">1 Fraud, Bot defense, Malware, Intrusion, Identity and MFA</span> → <span class="hf a">2 Warning agent ranks, merges, escalates</span> → <span class="hf op">Operator acknowledges; step-up MFA for high-risk actions</span></p>
         <p class="logged">Each agent hands its result back to the one that assigned it. Only checks that apply to an element run, so a switch skips Radio and Path. An audit fix opens in Review, where the Diagnosis and Change-safety agents take over.</p>
       </div>
       <div class="table-scroll"><table class="data" id="agents-table"></table></div>
@@ -901,6 +957,20 @@ body { padding-bottom: 72px; }
         </table>
       </div>
     </div>
+  </section>
+
+  <section class="view" id="view-security" role="tabpanel" aria-labelledby="tab-security" hidden>
+    <div class="card threat" id="threat" aria-live="polite"></div>
+    <div class="card">
+      <h2>Security agents, always on</h2>
+      <p class="sub">These agents run all the time, not only during an audit. Each one hands what it finds to the Warning agent. Every high-risk action asks the operator for step-up MFA first.</p>
+      <div class="sec-agents" id="sec-agents"></div>
+    </div>
+    <div class="sec-two">
+      <div class="card" id="fraud"></div>
+      <div class="card" id="mfa-card"></div>
+    </div>
+    <div class="card" id="warnings"></div>
   </section>
 
   <section class="view" id="view-spec" role="tabpanel" aria-labelledby="tab-spec" hidden>
@@ -956,22 +1026,25 @@ body { padding-bottom: 72px; }
 
   <section class="card refs" aria-labelledby="refs-h" style="margin-top: 20px">
     <h2 id="refs-h">Sources for the agent build</h2>
-    <p class="sub">Live data feeds and protocol standards the audit agents could draw on in a production build. The data on this page is simulated. References in APA 7.</p>
+    <p class="sub">Live data feeds, protocol standards and security frameworks the agents could draw on in a production build. The data on this page is simulated. References in APA 7.</p>
     <ol class="reflist">
           <li><span class="ref-agent">Path agent</span>Almes, G., Kalidindi, S., Zekauskas, M., &amp; Morton, A. (Ed.). (2016). <i>A one-way loss metric for IP performance metrics (IPPM)</i> (RFC 7680). Internet Engineering Task Force. <a href="https://www.rfc-editor.org/rfc/rfc7680" rel="noopener" target="_blank">https://www.rfc-editor.org/rfc/rfc7680</a></li>
-          <li><span class="ref-agent">Performance agent</span>Claise, B., Trammell, B., &amp; Aitken, P. (2013). <i>Specification of the IP Flow Information Export (IPFIX) protocol for the exchange of flow information</i> (RFC 7011). Internet Engineering Task Force. <a href="https://www.rfc-editor.org/rfc/rfc7011" rel="noopener" target="_blank">https://www.rfc-editor.org/rfc/rfc7011</a></li>
           <li><span class="ref-agent">Config agent</span>Cisco DevNet. (n.d.). <i>PSIRT openVuln API</i> [API documentation]. Retrieved October 22, 2026, from  <a href="https://developer.cisco.com/docs/psirt/" rel="noopener" target="_blank">https://developer.cisco.com/docs/psirt/</a></li>
           <li><span class="ref-agent">Path agent</span>Cisco ThousandEyes. (n.d.). <i>Internet outages map</i> [Data set]. Retrieved October 22, 2026, from  <a href="https://www.thousandeyes.com/outages/" rel="noopener" target="_blank">https://www.thousandeyes.com/outages/</a></li>
+          <li><span class="ref-agent">Performance agent</span>Claise, B., Trammell, B., &amp; Aitken, P. (2013). <i>Specification of the IP Flow Information Export (IPFIX) protocol for the exchange of flow information</i> (RFC 7011). Internet Engineering Task Force. <a href="https://www.rfc-editor.org/rfc/rfc7011" rel="noopener" target="_blank">https://www.rfc-editor.org/rfc/rfc7011</a></li>
           <li><span class="ref-agent">Path agent</span>Cloudflare. (n.d.). <i>Cloudflare Radar</i> [Data set]. Retrieved October 22, 2026, from  <a href="https://radar.cloudflare.com/" rel="noopener" target="_blank">https://radar.cloudflare.com/</a></li>
           <li><span class="ref-agent">Security agent</span>Cybersecurity and Infrastructure Security Agency. (n.d.). <i>Known exploited vulnerabilities catalog</i> [Data set]. GitHub. Retrieved October 22, 2026, from  <a href="https://github.com/cisagov/kev-data" rel="noopener" target="_blank">https://github.com/cisagov/kev-data</a></li>
           <li><span class="ref-agent">Config agent</span>Enns, R., Bjorklund, M., Schoenwaelder, J., &amp; Bierman, A. (Eds.). (2011). <i>Network configuration protocol (NETCONF)</i> (RFC 6241). Internet Engineering Task Force. <a href="https://www.rfc-editor.org/rfc/rfc6241" rel="noopener" target="_blank">https://www.rfc-editor.org/rfc/rfc6241</a></li>
           <li><span class="ref-agent">Reachability agent</span>Harrington, D., Presuhn, R., &amp; Wijnen, B. (2002). <i>An architecture for describing Simple Network Management Protocol (SNMP) management frameworks</i> (RFC 3411). Internet Engineering Task Force. <a href="https://www.rfc-editor.org/rfc/rfc3411" rel="noopener" target="_blank">https://www.rfc-editor.org/rfc/rfc3411</a></li>
           <li><span class="ref-agent">Performance agent</span>International Telecommunication Union. (2003). <i>One-way transmission time</i> (ITU-T Recommendation G.114). <a href="https://www.itu.int/rec/T-REC-G.114" rel="noopener" target="_blank">https://www.itu.int/rec/T-REC-G.114</a></li>
+          <li><span class="ref-agent">Identity and MFA agent</span>MITRE. (2025, October 24). <i>Multi-factor authentication request generation</i> (Technique T1621, Version 1.2). MITRE ATT&amp;CK. <a href="https://attack.mitre.org/techniques/T1621/" rel="noopener" target="_blank">https://attack.mitre.org/techniques/T1621/</a></li>
           <li><span class="ref-agent">Security agent</span>National Institute of Standards and Technology. (n.d.). <i>National vulnerability database</i> [Data set]. Retrieved October 22, 2026, from  <a href="https://nvd.nist.gov/" rel="noopener" target="_blank">https://nvd.nist.gov/</a></li>
           <li><span class="ref-agent">Config agent</span>OpenConfig. (n.d.). <i>OpenConfig: Vendor-neutral, model-driven network management</i>. Retrieved October 22, 2026, from  <a href="https://www.openconfig.net/" rel="noopener" target="_blank">https://www.openconfig.net/</a></li>
+          <li><span class="ref-agent">Fraud detection agent</span>OWASP Foundation. (n.d.). <i>OAT-001 carding</i>. OWASP Automated Threats to Web Applications. Retrieved October 22, 2026, from  <a href="https://owasp.org/www-project-automated-threats-to-web-applications/assets/oats/EN/OAT-001_Carding.html" rel="noopener" target="_blank">https://owasp.org/www-project-automated-threats-to-web-applications/assets/oats/EN/OAT-001_Carding.html</a></li>
           <li><span class="ref-agent">Reachability agent</span>Rekhter, Y., Li, T., &amp; Hares, S. (Eds.). (2006). <i>A Border Gateway Protocol 4 (BGP-4)</i> (RFC 4271). Internet Engineering Task Force. <a href="https://www.rfc-editor.org/rfc/rfc4271" rel="noopener" target="_blank">https://www.rfc-editor.org/rfc/rfc4271</a></li>
           <li><span class="ref-agent">Path agent</span>RIPE NCC. (n.d.-a). <i>RIPE Atlas</i> [Data set]. Retrieved October 22, 2026, from  <a href="https://atlas.ripe.net/" rel="noopener" target="_blank">https://atlas.ripe.net/</a></li>
           <li><span class="ref-agent">Path agent</span>RIPE NCC. (n.d.-b). <i>RIPEstat</i> [Data set]. Retrieved October 22, 2026, from  <a href="https://stat.ripe.net/" rel="noopener" target="_blank">https://stat.ripe.net/</a></li>
+          <li><span class="ref-agent">Identity and MFA agent</span>Temoshok, D., Fenton, J., Choong, Y.-Y., Lefkovitz, N., Regenscheid, A., Galluzzo, R., &amp; Richer, J. (2025). <i>Digital identity guidelines: Authentication and authenticator management</i> (NIST Special Publication 800-63B-4). National Institute of Standards and Technology. <a href="https://doi.org/10.6028/NIST.SP.800-63b-4" rel="noopener" target="_blank">https://doi.org/10.6028/NIST.SP.800-63b-4</a></li>
     </ol>
   </section>
 
@@ -2099,7 +2172,7 @@ body { padding-bottom: 72px; }
 
 
   // ---------- Network health and audit agent (simulated) ----------
-  const AGENTS = ["Audit lead", "Reachability agent", "Performance agent", "Config agent", "Radio agent", "Path agent", "Security agent"];
+  const AGENTS = ["Audit lead", "Reachability agent", "Performance agent", "Config agent", "Radio agent", "Path agent", "Security agent", "Fraud detection agent", "Bot defense agent"];
   const LAYERS = ["Edge", "WAN", "Campus core", "Access", "Services", "Endpoints"];
   // mon = what routine monitoring shows before an audit; checks + verdict = what the audit finds
   const ELEMENTS = [
@@ -2165,6 +2238,11 @@ body { padding-bottom: 72px; }
       checks: [["Reachability agent", "Collector reachable", "pass", "Up, disk 40% used"],
                ["Performance agent", "Flow records received, last 6 hours", "unknown", "No records from Seattle since 07:10"]],
       v: { status: "Unknown", score: null, conf: 0.55, likely: "The collector is up but receives no data from Seattle, so Seattle traffic cannot be fully checked. Likely flow export is off on the branch router.", fix: "Turn flow export back on at the Seattle router" } },
+    { id: "orders", layer: "Services", name: "Order system", where: "Web store · checkout API", mon: { score: 90, status: "Healthy" },
+      checks: [["Reachability agent", "Checkout API answering", "pass", "Up, 210 ms median response"],
+               ["Fraud detection agent", "Order volume and duplicates", "fail", "412 orders in 22 minutes, typical 90; 38 exact duplicates"],
+               ["Bot defense agent", "Automated traffic at checkout", "fail", "58% of sessions use headless browsers"]],
+      v: { status: "Degraded", score: 48, conf: 0.78, sec: true, likely: "Likely a bot attack testing stolen cards, plus a checkout bug that made 38 duplicate orders. Not malware on our network." } },
     { id: "ep", layer: "Endpoints", name: "Workstations", where: "HQ · 1,240 devices", mon: { score: 92, status: "Healthy" },
       checks: [["Reachability agent", "Devices seen in the last hour", "pass", "1,212 of 1,240"],
                ["Security agent", "Unusual traffic by host", "warn", "10.20.4.17: 248 DNS queries a minute, 20 times normal"],
@@ -2220,14 +2298,14 @@ body { padding-bottom: 72px; }
   }
   function renderFindings() {
     const box = $("#h-findings");
-    if (!audit.done) { box.innerHTML = `<h2>Audit findings</h2><p class="note">${audit.running ? "Findings appear here as each element finishes." : "No audit yet. Monitoring alone flags 2 elements; the audit checks all 13 and often finds more."}</p>`; return; }
+    if (!audit.done) { box.innerHTML = `<h2>Audit findings</h2><p class="note">${audit.running ? "Findings appear here as each element finishes." : "No audit yet. Monitoring alone flags 2 elements; the audit checks all ${ELEMENTS.length} and often finds more."}</p>`; return; }
     const bad = ELEMENTS.filter((e) => audit.results[e.id] && audit.results[e.id].done && e.v.status !== "Healthy").sort((a, b) => ST_RANK[a.v.status] - ST_RANK[b.v.status] || (a.v.score ?? 0) - (b.v.score ?? 0));
     const ok = ELEMENTS.filter((e) => audit.results[e.id] && audit.results[e.id].done && e.v.status === "Healthy");
     box.innerHTML = `<h2>Not up to par (${bad.length})</h2>
       <ul class="finds">${bad.map((e) => `<li class="${stOf(e.v.status)}">
         <span class="f-top"><b>${esc(e.name)}</b><span class="st-pill ${stOf(e.v.status)}">${ST_LABEL[e.v.status]}</span><span class="logged">${Math.round(e.v.conf * 100)}% sure</span></span>
         <span>${esc(e.v.likely)}</span>
-        <span class="f-act">${e.v.rec ? `<button class="btn small primary" type="button" data-rec="${e.v.rec}">Open fix ${e.v.rec}</button>` : e.v.fix ? `<span class="logged">Suggested: ${esc(e.v.fix)}</span>` : ""}
+        <span class="f-act">${e.v.rec ? `<button class="btn small primary" type="button" data-rec="${e.v.rec}">Open fix ${e.v.rec}</button>` : e.v.sec ? `<button class="btn small primary" type="button" data-sec="1">Open in Security</button>` : e.v.fix ? `<span class="logged">Suggested: ${esc(e.v.fix)}</span>` : ""}
           ${audit.corrected[e.id] ? `<span class="logged">Sent as a correction to the audit model</span>` : `<button class="btn small" type="button" data-wrong="${e.id}">This verdict is wrong</button>`}</span>
       </li>`).join("")}</ul>
       <h2>Working (${ok.length})</h2>
@@ -2267,6 +2345,8 @@ body { padding-bottom: 72px; }
     const bad = ELEMENTS.filter((e) => audit.results[e.id] && audit.results[e.id].done && e.v.status !== "Healthy").length;
     const checked = ELEMENTS.filter((e) => audit.results[e.id] && audit.results[e.id].done).length;
     emit(audit.stop ? "audit_stopped" : "audit_finished", { elements_checked: checked, not_up_to_par: bad });
+    audit.doneAt = Date.now();
+    if (!audit.stop) pushWarning({ sev: "Medium", agent: "Audit lead", title: `Audit: ${bad} of ${checked} elements not up to par`, link: "health" });
     setBar("Audit lead", audit.stop ? `Stopped. ${checked} of ${ELEMENTS.length} elements checked, ${bad} not up to par.` : `Audit complete. ${checked} elements checked, ${bad} not up to par. Most urgent first in the findings.`, `${n} of ${total} checks`, audit.stop ? Math.round((n / total) * 100) : 100, "done");
     $("#audit-last").textContent = `Last audit ${audit.at}${audit.stop ? " (stopped early)" : ""}. Verdicts are likely, not certain.`;
     $("#audit-run").disabled = false; $("#audit-run").textContent = "Audit again"; $("#audit-stop").hidden = true;
@@ -2280,6 +2360,7 @@ body { padding-bottom: 72px; }
   $("#h-findings").addEventListener("click", (e) => {
     const r = e.target.closest("[data-rec]"), w = e.target.closest("[data-wrong]");
     if (r) { state.current = r.dataset.rec; state.panel = null; renderQueue(); renderDetail(); selectTab("review"); }
+    if (e.target.closest("[data-sec]")) selectTab("security");
     if (w) { audit.corrected[w.dataset.wrong] = true; emit("audit_verdict_corrected", { element: w.dataset.wrong }); renderFindings(); }
   });
 
@@ -2295,9 +2376,20 @@ body { padding-bottom: 72px; }
     ["Radio agent", "Network health", "Audit 3 (Wi-Fi only)", "Audit lead", "Audit lead", "Checks Wi-Fi channels, retry rates and neighboring networks.", "Wireless controller telemetry"],
     ["Path agent", "Network health", "Audit 3 (WAN and carriers)", "Audit lead", "Audit lead", "Traces traffic hop by hop to find where loss or delay starts, including carrier hops.", "Path traces, Internet measurement data"],
     ["Config agent", "Network health", "Audit 4", "Audit lead", "Audit lead", "Compares firmware and configuration to the approved baseline and vendor advisories.", "NETCONF, OpenConfig, vendor advisories"],
-    ["Security agent", "Network health", "Audit 5", "Audit lead", "Audit lead", "Flags unusual traffic by host and checks devices against known exploited vulnerabilities.", "DNS logs, vulnerability catalogs"]
+    ["Security agent", "Network health", "Audit 5", "Audit lead", "Audit lead", "Flags unusual traffic by host and checks devices against known exploited vulnerabilities.", "DNS logs, vulnerability catalogs"],
+    ["Fraud detection agent", "Security, always on (and audit)", "Security 1", "Order and payment events; Bot defense and Malware agents", "Warning agent", "Watches orders and payments and says whether a pattern is most likely an error, a bot attack or malware.", "Order events, card decline codes, account age"],
+    ["Bot defense agent", "Security, always on (and audit)", "Security 1", "Checkout and sign-in traffic", "Fraud detection agent; Warning agent", "Separates people from automated traffic: headless browsers, request rates, hosting networks.", "Web traffic, device fingerprints, IP reputation"],
+    ["Malware agent", "Security, always on", "Security 1", "Endpoint and DNS telemetry", "Fraud detection agent; Warning agent", "Looks for infected devices inside the network, including devices that call business systems.", "DNS logs, endpoint check-ins, known bad domains"],
+    ["Intrusion agent", "Security, always on", "Security 1", "Firewall and session logs", "Warning agent", "Watches for break-in attempts, exploited vulnerabilities and movement between network segments.", "Firewall logs, vulnerability catalogs, admin sessions"],
+    ["Identity and MFA agent", "Security, always on", "Security 1", "Sign-in and MFA events", "Warning agent", "Checks MFA coverage and flags MFA fatigue, impossible travel and risky sign-ins.", "Identity provider sign-in and MFA logs"],
+    ["Warning agent", "Security, always on", "Security 2", "Every agent", "Operator; on-call if not acknowledged in time", "Ranks warnings by severity, merges duplicates and escalates on a timer until a person acknowledges.", "Warnings from all agents, on-call schedule"]
   ];
   function agentStatus(name, where) {
+    if (where.startsWith("Security")) {
+      if (audit.running && audit.agent === name) return { cls: "p-wait", label: "Running now (audit)" };
+      const alert = SEC_AGENTS.find((a) => a.name === name && a.alert && a.alert());
+      return alert ? { cls: "p-rej", label: "Always on · alert" } : { cls: "p-acc", label: "Always on · normal" };
+    }
     if (where === "Review") {
       const n = RECS.filter((r) => A2A[r.id]).length;
       return { cls: "p-acc", label: `Ran on ${n} recommendations` };
@@ -2314,8 +2406,175 @@ body { padding-bottom: 72px; }
       <tbody>${AGENT_DEFS.map(([n, w, step, from, to, d, data]) => { const st = agentStatus(n, w); return `<tr><td><b>${esc(n)}</b></td><td class="mono">${esc(step)}</td><td>${esc(from)}</td><td>${esc(to)}</td><td><span class="pill ${st.cls}">${esc(st.label)}</span></td><td>${esc(d)}</td><td>${esc(data)}</td><td>No, a person approves</td></tr>`; }).join("")}</tbody>`;
   }
 
+
+  // ---------- Security: always-on agents, fraud, MFA, warnings (simulated) ----------
+  const sec = { acts: {}, wrong: false, t0: Date.now(), warns: [], ticks: 0, newDone: false };
+  const SPIKE = [6,9,12,15,18,20,22,22,21,23,24,22,20,21,19,20,22,21,19,20,18,18];
+  const ORDERS = [4,3,5,4,3,4,6,4,3,5,4,4,3,5,6,4,3,4,5,4,3,4,5,4,4,3,5,4,6,4,3,4,5,4,3,4,4,5].concat(SPIKE);
+  const attackOpen = () => !sec.acts.challenge;
+  const mfaOpen = () => !sec.acts.lock;
+  const SEC_AGENTS = [
+    { name: "Fraud detection agent", role: "Orders and payments", tests: ["Order velocity by account", "Duplicate orders within 5 seconds", "Card decline rate", "Orders under $5"], alert: attackOpen, n: 18240 },
+    { name: "Bot defense agent", role: "Checkout and sign-in traffic", tests: ["Headless browser fingerprints", "Requests per IP at checkout", "Traffic from hosting networks", "New accounts per minute"], alert: attackOpen, n: 50311 },
+    { name: "Malware agent", role: "Devices inside the network", tests: ["Unusual DNS by host", "Devices calling the order API", "Known bad domains", "Endpoint agent check-ins"], alert: () => false, n: 9632 },
+    { name: "Intrusion agent", role: "Firewall, sessions, vulnerabilities", tests: ["Firewall denies by source", "Exploited vulnerabilities on exposed devices", "Movement between network segments", "New admin sessions"], alert: () => sec.newDone && !sec.acts.admin03, n: 27709 },
+    { name: "Identity and MFA agent", role: "Sign-ins and MFA", tests: ["MFA pushes per account", "Sign-ins from new countries", "Accounts without MFA", "Impossible travel"], alert: mfaOpen, n: 6118 },
+    { name: "Warning agent", role: "Ranks, merges, escalates", tests: ["Ranking new warnings", "Merging duplicates", "Escalation timers", "On-call schedule"], alert: () => sec.warns.some((w) => w.status === "Escalated"), n: 412 }
+  ];
+  SEC_AGENTS.forEach((a) => (a.i = 0));
+  const SEV = { Critical: 0, High: 1, Medium: 2, Low: 3 };
+  const WINDOW = { Critical: 300, High: 900 };
+  function pushWarning(w, quiet) {
+    const id = "W" + (sec.warns.length + 1);
+    sec.warns.push(Object.assign({ id, status: "New", merged: 1, at: Date.now() }, w));
+    emit("warning_raised", { id, severity: w.sev, agent: w.agent });
+    if (!quiet) toast(`${w.sev} warning from ${w.agent}: ${w.title}`);
+    renderSecurity();
+    return id;
+  }
+  function seedWarnings() {
+    const now = Date.now();
+    sec.warns = [
+      { id: "W1", sev: "Critical", agent: "Fraud detection agent", title: "Order spike: 412 orders in 22 minutes; likely bots testing stolen cards", status: "New", merged: 6, at: now - 60e3, fix: "challenge" },
+      { id: "W2", sev: "High", agent: "Identity and MFA agent", title: "admin-07 got 23 MFA push requests in 10 minutes, all denied", status: "New", merged: 1, at: now - 120e3, fix: "lock" },
+      { id: "W3", sev: "High", agent: "Bot defense agent", title: "58% of checkout sessions use headless browsers", status: "Merged into W1", merged: 1, at: now - 90e3 },
+      { id: "W4", sev: "Medium", agent: "Malware agent", title: "Workstation 10.20.4.17 DNS burst; likely backup software, not malware", status: "Acknowledged", merged: 1, at: now - 600e3 },
+      { id: "W5", sev: "Medium", agent: "Identity and MFA agent", title: "2 admin accounts have no MFA", status: "New", merged: 1, at: now - 1800e3, fix: "require" },
+      { id: "W6", sev: "Low", agent: "Intrusion agent", title: "Firewall blocked 1,904 scans from one network; no follow-up seen", status: "New", merged: 1, at: now - 2400e3 }
+    ];
+  }
+  function threat() {
+    const open = [attackOpen(), mfaOpen(), sec.newDone && !sec.acts.admin03].filter(Boolean).length;
+    return open >= 2 ? "High" : open === 1 ? "Elevated" : "Guarded";
+  }
+  function renderThreat() {
+    const lv = threat(), tag = $("#threat-tag");
+    tag.className = "threat-tag lv-" + lv; tag.textContent = `Threat: ${lv}${lv === "Guarded" ? "" : " · under attack"}`;
+    const lines = [];
+    lines.push(attackOpen() ? `<li class="bad"><b>Orders:</b> a bot attack testing stolen cards is likely under way on the order system (78% sure). Not contained.</li>` : `<li class="ok"><b>Orders:</b> bot challenge is on at checkout; the attack is contained.</li>`);
+    lines.push(mfaOpen() ? `<li class="bad"><b>Accounts:</b> admin-07 is receiving repeated MFA pushes; the password is likely known (74% sure).</li>` : `<li class="ok"><b>Accounts:</b> admin-07 is locked and its password and MFA reset.</li>`);
+    if (sec.newDone) lines.push(!sec.acts.admin03 ? `<li class="bad"><b>Admin sessions:</b> admin-03 signed in from an unrecognized device (60% sure it is not them).</li>` : `<li class="ok"><b>Admin sessions:</b> admin-03's new session is ended and the device blocked.</li>`);
+    lines.push(`<li class="ok"><b>Network:</b> no intrusion found. Malware agent sees no infected devices calling business systems.</li>`);
+    const ans = lv === "Guarded" ? "No active attack. Agents keep watching." : lv === "High" ? "Likely yes. Two attacks are active and need a decision." : "Likely yes. One attack is still active.";
+    $("#threat").className = "card threat lv-" + lv;
+    $("#threat").innerHTML = `<div class="threat-top"><div><p class="logged">Are we under attack?</p><h2>${ans}</h2></div><span class="threat-lv">Threat level <b>${lv}</b></span></div><ul class="threat-list">${lines.join("")}</ul>
+      <p class="logged">Answer written by the Warning agent from the five watcher agents. Verdicts are likely, not certain.</p>`;
+  }
+  function renderSecAgents() {
+    const box = $("#sec-agents"); if (!box) return;
+    box.innerHTML = SEC_AGENTS.map((a, k) => { const al = a.alert(); return `<div class="sa${al ? " alert" : ""}${sec.ticks % SEC_AGENTS.length === k ? " now" : ""}">
+      <span class="sa-top"><b>${esc(a.name)}</b><span class="pill ${al ? "p-rej" : "p-acc"}">${al ? "Alert" : "Normal"}</span></span>
+      <span class="logged">${esc(a.role)} · runs every 10 s</span>
+      <span class="sa-now">Checking now: ${esc(a.tests[a.i])}</span>
+      <span class="logged mono">${a.n.toLocaleString()} signals checked today</span></div>`; }).join("");
+  }
+  function hypo(name, pct, n, items, cls) {
+    return `<div class="hyp ${cls}"><div class="hyp-top"><b>${name}</b><span class="mono">${pct}%</span></div><span class="el-meter"><i style="width:${pct}%"></i></span>
+      <span class="logged">Explains ${n} orders</span><ul>${items.map((t) => `<li>${t}</li>`).join("")}</ul></div>`;
+  }
+  function secAct(key, label, needsMfa) {
+    if (sec.acts[key]) return `<span class="done-act">${ICON.check}${label}: done</span>`;
+    return `<button class="btn small${needsMfa ? " primary" : ""}" type="button" data-sa="${key}" data-mfa="${needsMfa ? 1 : ""}" data-label="${esc(label)}">${label}${needsMfa ? " · MFA" : ""}</button>`;
+  }
+  function renderFraud() {
+    const max = Math.max(...ORDERS), W = 600, H = 120, bw = W / ORDERS.length;
+    const bars = ORDERS.map((v, i) => `<rect x="${(i * bw).toFixed(1)}" y="${(H - (v / max) * (H - 8)).toFixed(1)}" width="${(bw - 2).toFixed(1)}" height="${((v / max) * (H - 8)).toFixed(1)}" rx="2" class="${i >= ORDERS.length - SPIKE.length ? "spk" : ""}"/>`).join("");
+    $("#fraud").innerHTML = `<h2>Multiple orders: error, bot attack or malware?</h2>
+      <p class="sub">Fraud detection agent, with the Bot defense and Malware agents</p>
+      <figure class="ord"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Orders per minute over the last hour; a spike to about 20 a minute in the last 22 minutes, from a typical 4">${bars}</svg>
+        <figcaption class="viz-cap"><span>Orders per minute, last 60 minutes</span><span>Simulated</span></figcaption></figure>
+      <div class="verdict st-Degraded"><p><b>Most likely:</b> bots testing stolen cards (carding), plus a checkout bug that made 38 duplicate orders. Not malware on our network.</p><p class="logged">78% sure · 412 orders in 22 minutes, typical 90</p></div>
+      <div class="split" aria-label="How the 412 orders split"><i class="b" style="flex:362">362 bot</i><i class="e" style="flex:38">38 error</i><i class="u" style="flex:12">12</i></div>
+      <p class="logged">362 likely bot · 38 likely error · 12 unclear, held for a person</p>
+      <div class="hyps">
+        ${hypo("Bot attack", 78, 362, ["71% of orders are under $5", "63% of cards declined, typical 3%", "186 new accounts in 22 minutes, 64% from 3 hosting networks", "58% of sessions use headless browsers"], "h-bot")}
+        ${hypo("Error", 18, 38, ["38 orders are exact copies within 2 seconds, same session, after a checkout timeout", "Does not explain the new accounts or the declines"], "h-err")}
+        ${hypo("Malware", 4, 0, ["No order calls came from inside the network", "Workstation 10.20.4.17 made no checkout calls; its DNS burst matches backup software"], "h-mal")}
+      </div>
+      <div class="f-act">${secAct("challenge", "Turn on bot challenge at checkout", true)}${secAct("hold", "Hold 374 suspect orders", false)}${secAct("void", "Void 38 duplicates and refund", true)}
+        ${sec.wrong ? `<span class="logged">Sent as a correction to the fraud model</span>` : `<button class="btn small" type="button" data-sa="wrong">This verdict is wrong</button>`}</div>`;
+  }
+  function renderMfa() {
+    $("#mfa-card").innerHTML = `<h2>MFA and accounts</h2>
+      <p class="sub">Identity and MFA agent</p>
+      <div class="mstats"><div><b class="mono">95.6%</b><span class="logged">accounts with MFA (1,186 of 1,240)</span></div><div><b class="mono">${sec.acts.require ? 0 : 2}</b><span class="logged">admin accounts without MFA</span></div><div><b class="mono">31%</b><span class="logged">admins on phishing-resistant keys</span></div></div>
+      <div class="finds"><div class="fnd st-Watch"><span class="f-top"><b>admin-07: likely MFA fatigue attack</b><span class="st-pill st-Degraded">High</span><span class="logged">74% sure</span></span>
+        <span>23 push requests in 10 minutes, all denied, after a correct password from a country this account has never used. The password is probably known.</span>
+        <span class="f-act">${secAct("lock", "Lock admin-07, reset password and MFA", true)}</span></div>
+      <div class="fnd st-Watch"><span class="f-top"><b>2 admin accounts have no MFA</b><span class="st-pill st-Watch">Medium</span></span>
+        <span>Both can approve network changes. Requiring MFA at next sign-in closes the gap.</span>
+        <span class="f-act">${secAct("require", "Require MFA for both admins", true)}</span></div>
+      ${sec.newDone ? `<div class="fnd st-Watch"><span class="f-top"><b>admin-03: sign-in from an unrecognized device</b><span class="st-pill st-Degraded">High</span><span class="logged">60% sure it is not them</span></span>
+        <span>New device, new city, passed MFA by push. Could be a new laptop; the agent cannot tell.</span>
+        <span class="f-act">${secAct("admin03", "End session and block the device", true)}</span></div>` : ""}</div>
+      <p class="logged">Rule: high-risk actions need step-up MFA with number matching, never a plain push approval.</p>`;
+  }
+  function mmss(sec_) { const m = Math.floor(sec_ / 60), s2 = Math.floor(sec_ % 60); return `${m}:${String(s2).padStart(2, "0")}`; }
+  function renderWarnings() {
+    const list = sec.warns.slice().sort((a, b) => SEV[a.sev] - SEV[b.sev] || b.at - a.at);
+    const now = Date.now();
+    $("#warnings").innerHTML = `<div class="warn-head"><h2>Warnings</h2><span class="logged">Warning agent · Critical not acknowledged in 5 minutes pages on-call; High in 15 minutes goes to the security channel. Duplicates merge into one warning.</span></div>
+      <div class="table-scroll"><table class="data warn-t"><thead><tr><th scope="col">Severity</th><th scope="col">Warning</th><th scope="col">From</th><th scope="col">Raised</th><th scope="col">Status</th><th scope="col">Action</th></tr></thead><tbody>
+      ${list.map((w) => {
+        const left = WINDOW[w.sev] && w.status === "New" ? Math.max(0, WINDOW[w.sev] - (now - w.at) / 1000) : null;
+        const stat = w.status === "New" && left != null ? `New · escalates in <span class="mono">${mmss(left)}</span>` : esc(w.status);
+        const btns = w.status === "New" || w.status === "Escalated" ? `<button class="btn small" type="button" data-ack="${w.id}">Acknowledge</button>` : "";
+        return `<tr class="sev-${w.sev}"><td><span class="sev">${w.sev}</span></td><td>${esc(w.title)}${w.merged > 1 ? ` <span class="logged">(${w.merged} merged)</span>` : ""}</td><td>${esc(w.agent)}</td><td class="mono">${new Date(w.at).toTimeString().slice(0, 5)}</td><td>${stat}</td><td>${btns}</td></tr>`;
+      }).join("")}</tbody></table></div>`;
+  }
+  function renderSecurity() { if (!$("#threat")) return; renderThreat(); renderSecAgents(); renderFraud(); renderMfa(); renderWarnings(); renderAgents(); }
+  function toast(msg) {
+    const t = $("#toast"); t.textContent = msg; t.hidden = false;
+    clearTimeout(toast.h); toast.h = setTimeout(() => (t.hidden = true), 6000);
+  }
+  const RESOLVES = { challenge: "W1", lock: "W2", require: "W5", admin03: null };
+  function applyAct(key, label) {
+    sec.acts[key] = true;
+    emit("security_action_applied", { action: key, mfa: true });
+    const wid = key === "admin03" ? sec.admin03W : RESOLVES[key];
+    const w = sec.warns.find((x) => x.id === wid); if (w) w.status = "Resolved by operator";
+    toast(`${label}: applied (simulated)`);
+    renderSecurity();
+  }
+  function stepUp(key, label) {
+    const d = $("#mfa-dlg");
+    $("#mfa-what").textContent = label + ". This changes live systems, so the agent hands the decision back to you.";
+    $("#mfa-num").textContent = String(10 + Math.floor(Math.random() * 90));
+    if (!d.showModal) { applyAct(key, label); return; }
+    d.returnValue = "";
+    d.onclose = () => { if (d.returnValue === "ok") { emit("mfa_step_up_approved", { action: key }); applyAct(key, label); } else emit("mfa_step_up_denied", { action: key }); };
+    d.showModal();
+  }
+  $("#view-security").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-sa]"), a = e.target.closest("[data-ack]");
+    if (b) {
+      const k = b.dataset.sa;
+      if (k === "wrong") { sec.wrong = true; emit("fraud_verdict_corrected", {}); renderFraud(); return; }
+      if (b.dataset.mfa) stepUp(k, b.dataset.label); else applyAct(k, b.dataset.label);
+    }
+    if (a) { const w = sec.warns.find((x) => x.id === a.dataset.ack); w.status = "Acknowledged"; emit("warning_acknowledged", { id: w.id }); renderSecurity(); }
+  });
+  $("#threat-tag").addEventListener("click", () => selectTab("security"));
+  function secTick() {
+    sec.ticks++;
+    const a = SEC_AGENTS[sec.ticks % SEC_AGENTS.length];
+    a.i = (a.i + 1) % a.tests.length; a.n += 40 + Math.floor(Math.random() * 160);
+    const now = Date.now();
+    sec.warns.forEach((w) => { if (w.status === "New" && WINDOW[w.sev] && (now - w.at) / 1000 >= WINDOW[w.sev]) { w.status = "Escalated"; emit("warning_escalated", { id: w.id }); toast(`${w.id} escalated: ${w.sev === "Critical" ? "on-call paged" : "posted to the security channel"} (simulated)`); } });
+    if (attackOpen() && sec.ticks % 10 === 0) { const w1 = sec.warns.find((x) => x.id === "W1"); if (w1) w1.merged++; }
+    if (!sec.newDone && now - sec.t0 > 45e3) { sec.newDone = true; sec.admin03W = pushWarning({ sev: "High", agent: "Intrusion agent", title: "admin-03 signed in from an unrecognized device", fix: "admin03" }); }
+    if (!audit.running && !(audit.doneAt && now - audit.doneAt < 8000)) {
+      setBar(a.name, `Always on · ${a.tests[a.i]}`, `Security agents: ${SEC_AGENTS.length} running · threat ${threat()}`, 100, a.alert() ? "busy" : "done");
+    }
+    if (!$("#view-security").hidden) { renderSecAgents(); renderWarnings(); renderThreat(); }
+    else renderThreat();
+    if (!$("#view-agents").hidden) renderAgents();
+  }
+  seedWarnings();
+  setInterval(secTick, 2000);
+
   // ---------- Tabs ----------
-  const TABS = ["review", "health", "learn", "agents", "spec"];
+  const TABS = ["review", "health", "learn", "agents", "security", "spec"];
   function selectTab(name, focus) {
     TABS.forEach((t) => {
       const on = t === name;
@@ -2329,6 +2588,7 @@ body { padding-bottom: 72px; }
     if (name === "review") requestAnimationFrame(drawDetailViz);
     if (name === "health") renderHealth();
     if (name === "agents") renderAgents();
+    if (name === "security") renderSecurity();
     window.scrollTo({ top: 0 });
   }
   TABS.forEach((t, i) => {
@@ -2364,7 +2624,7 @@ body { padding-bottom: 72px; }
   });
 
   function renderAll() {
-    renderQueue(); renderDetail(); renderHealth();
+    renderQueue(); renderDetail(); renderHealth(); renderSecurity();
     if (!$("#view-learn").hidden) { renderDash(); renderExamples(); }
     renderEvents();
   }
@@ -2478,6 +2738,16 @@ body { padding-bottom: 72px; }
   mo.observe(document.body, { childList: true, subtree: true });
 })();
 </script>
+<dialog class="mfa-dlg" id="mfa-dlg" aria-labelledby="mfa-title">
+  <form method="dialog">
+    <p class="logged">Step-up MFA · simulated, nothing is sent</p>
+    <h3 id="mfa-title">Confirm a high-risk action</h3>
+    <p id="mfa-what"></p>
+    <div class="mfa-num"><span>Match this number on your authenticator:</span><b class="mono" id="mfa-num">42</b></div>
+    <div class="h-btns"><button class="btn primary" value="ok" type="submit">I matched it, approve</button><button class="btn" value="no" type="submit">Deny</button></div>
+  </form>
+</dialog>
+<div class="toast" id="toast" role="status" aria-live="assertive" hidden></div>
 <div class="agentbar" id="agentbar" role="status" aria-live="polite" aria-atomic="true">
   <span class="ab-dot" aria-hidden="true"></span>
   <span class="ab-k">Agent</span><b id="ab-agent">Audit lead</b>
