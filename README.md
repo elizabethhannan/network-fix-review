@@ -41,6 +41,7 @@ AXO (Agent Experience Optimization) shapes what the model receives back: every a
 ## Implementation
 
 - One self-contained web page: HTML, CSS and plain JavaScript, no build step, no backend.
+- Agent-to-agent review: a diagnosis agent proposes each fix and a separate change-safety agent checks it against what the first agent cannot see (change calendar, what else a switch carries, recent rollouts). When the two disagree, the item is flagged and waits for the operator; neither agent can apply a change on its own. Each review is logged as an `agent_review_shown` telemetry event.
 - A seeded simulation produces 60 days of decisions, so every number on the dashboard comes from one set of records plus the viewer's own decisions.
 - Built in code with AI coding tools; hosted on GitHub Pages.
 

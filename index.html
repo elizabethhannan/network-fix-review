@@ -119,6 +119,20 @@ main { padding-block: 20px 48px; }
 .dhead { display: grid; gap: 8px; }
 .dmeta { display: flex; flex-wrap: wrap; gap: 8px 14px; color: var(--ink-3); font-size: 0.875rem; align-items: center; }
 .dhead h2 { font-size: 1.5rem; font-weight: 700; }
+.a2a { margin-top: 14px; border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; }
+.a2a h3 { margin-top: 0; }
+.a2a .flow { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: stretch; }
+.a2a .agent { background: var(--ai-soft); border-radius: var(--radius); padding: 10px 12px; }
+.a2a .agent b { display: block; color: var(--ai); font-size: 0.875rem; }
+.a2a .agent span { font-size: 0.875rem; color: var(--ink-2); }
+.a2a .hand { align-self: center; color: var(--ink-3); font-size: 0.8125rem; text-align: center; }
+.a2a .verdict { margin: 10px 0 4px; font-weight: 700; }
+.a2a .verdict.agree { color: var(--accent); }
+.a2a .verdict.disagree { color: #9c2b2b; }
+.a2a ul { margin: 6px 0 0; padding-left: 18px; font-size: 0.875rem; color: var(--ink-2); }
+.a2a .rule { margin: 8px 0 0; font-size: 0.8125rem; color: var(--ink-3); }
+.pill.agents { background: #f6e3e3; color: #9c2b2b; }
+@media (max-width: 640px) { .a2a .flow { grid-template-columns: 1fr; } .a2a .hand { transform: rotate(90deg); } }
 .says { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start; background: var(--ai-soft); border-radius: var(--radius); padding: 14px 16px; }
 .says .who { font-weight: 700; color: var(--ai); font-size: 0.875rem; white-space: nowrap; display: inline-flex; gap: 6px; align-items: center; }
 .says .who svg { width: 14px; height: 14px; }
@@ -569,6 +583,21 @@ table.data td.mono { white-space: nowrap; }
   // ---------- Simulated decision history: 60 days, one record per operator decision ----------
   // Every number on the dashboard is computed from these records (plus your decisions in this demo),
   // so tiles, chart, lists and requirements always agree.
+
+  // Agent-to-agent review: a second, independent agent checks every proposal before a person sees it.
+  // Neither agent can apply a change; when they disagree, the item waits for the operator.
+  const A2A = {
+    "R-1042": { agrees: true, verdict: "Agrees", note: "No change freeze at Campus HQ tonight, and the rollback path was tested last week.",
+      checked: ["Change calendar", "Clients affected (42)", "Rollback path"] },
+    "R-1043": { agrees: true, verdict: "Agrees, with one condition", note: "Only if the backup still finishes before 6 a.m. Recent runs take about 2 h 10 min, so a 1 a.m. start leaves room.",
+      checked: ["Backup run times", "Thursday peak forecast"] },
+    "R-1044": { agrees: false, verdict: "Objects", note: "Two of the 12 switches also carry the Building A badge readers, so their 6-minute outage would lock those doors. It proposes upgrading those 2 last, after building security has been told.",
+      checked: ["What else each switch carries", "Who must be told first", "Firmware release notes"] },
+    "R-1045": { agrees: false, verdict: "Asks for more evidence", note: "The DNS pattern matches the backup client rolled out on Monday. It asks for a 15-minute packet capture before anyone is quarantined.",
+      checked: ["Recent software rollouts", "Known-good DNS patterns", "Who uses the workstation"] },
+    "R-1046": { agrees: true, verdict: "Agrees there is no fix yet", note: "It moves the suggested probe outside the 2 to 4 p.m. video-call peak at Seattle.",
+      checked: ["Site traffic peaks", "Probe cost"] }
+  };
   function mulberry32(a) { return function () { a |= 0; a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
   const DAYS = 68; // 60 days shown at most, plus a week so every trailing 7-day value has a full week behind it
   const KINDS = [
@@ -662,7 +691,7 @@ table.data td.mono { white-space: nowrap; }
       return `<button class="qitem" type="button" data-id="${r.id}" aria-current="${r.id === state.current}">
         <span class="row1"><span class="mono">${r.id} · ${esc(r.kind)}</span><span>${esc(r.site.split(" · ")[0])}</span></span>
         <span class="ttl">${esc(r.title)}</span>
-        <span class="row3">${conf}${riskPill(r)}<span class="pill ${s.cls}">${s.icon}${s.label}</span></span>
+        <span class="row3">${conf}${riskPill(r)}${A2A[r.id] && !A2A[r.id].agrees ? `<span class="pill agents">Agents disagree</span>` : ""}<span class="pill ${s.cls}">${s.icon}${s.label}</span></span>
       </button>`;
     }).join("");
   }
@@ -759,12 +788,29 @@ table.data td.mono { white-space: nowrap; }
   }
 
   // ---------- Detail ----------
+  function a2aBlock(r) {
+    const a = A2A[r.id];
+    if (!a) return "";
+    return `<div class="a2a" aria-label="Agent review">
+      <h3>Agent review</h3>
+      <div class="flow">
+        <div class="agent"><b>Diagnosis agent</b><span>Reads network telemetry and proposes the fix above.</span></div>
+        <div class="hand" aria-hidden="true">hands off →</div>
+        <div class="agent"><b>Change-safety agent</b><span>Checks the proposal on its own, against what the first agent cannot see.</span></div>
+      </div>
+      <p class="verdict ${a.agrees ? "agree" : "disagree"}">Change-safety agent: ${esc(a.verdict)}</p>
+      <p class="note">${esc(a.note)}</p>
+      <ul>${a.checked.map((c) => `<li>Checked: ${esc(c)}</li>`).join("")}</ul>
+      <p class="rule">${a.agrees ? "Both agents agree. You still make the call." : "The agents disagree, so this waits for you."} Neither agent can apply a change on its own.</p>
+    </div>`;
+  }
   function renderDetail() {
     const r = recById(state.current);
     const d = state.decisions[r.id];
     if (!state.openedAt[r.id]) {
       state.openedAt[r.id] = Date.now();
       emit("rec_opened", { rec_id: r.id, kind: r.kind, confidence: r.confidence, risk: r.risk });
+      if (A2A[r.id]) emit("agent_review_shown", { rec_id: r.id, checker: "change_safety", agrees: A2A[r.id].agrees, verdict: A2A[r.id].verdict });
     }
     const pct = r.confidence == null ? null : Math.round(r.confidence * 100);
     const ev0 = r.evidence[0];
@@ -807,6 +853,7 @@ table.data td.mono { white-space: nowrap; }
         <h2>${esc(r.title)}</h2>
       </div>
       <div class="says"><span class="who">${ICON.ai}AI says</span><p>${esc(r.says)}</p></div>
+      ${a2aBlock(r)}
       <div class="cols">
         <div class="block"><h3>Why</h3>
           ${lineChart(ev0, r.id)}
