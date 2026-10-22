@@ -605,6 +605,14 @@ body { padding-bottom: 72px; }
 .ab-trk i { display: block; height: 100%; width: 0; background: var(--ai); transition: width .3s; }
 @media (max-width: 760px) { .h-head { grid-template-columns: minmax(0, 1fr); } .layer:not(:last-child)::after { display: none; } .ab-trk { width: 90px; } }
 
+.handflow { display: grid; gap: 8px; }
+.handflow p { margin: 0; line-height: 2; }
+.hf { display: inline-block; padding: 1px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface-2); font-size: .875rem; white-space: nowrap; }
+.hf.a { color: var(--ai); background: var(--ai-soft); border-color: transparent; font-weight: 700; }
+.hf.op { color: var(--accent); background: var(--accent-soft); border-color: transparent; font-weight: 700; }
+#agents-table { min-width: 1200px; }
+#agents-table th:nth-child(2), #agents-table td:nth-child(2) { width: 9em; }
+#agents-table th:nth-child(1) { width: 11em; }
 .refs .reflist { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .refs .reflist li { padding-left: 2em; text-indent: -2em; font-size: .9375rem; color: var(--ink-2); overflow-wrap: anywhere; }
 .refs .reflist a { color: var(--s1); }
@@ -866,6 +874,11 @@ body { padding-bottom: 72px; }
     <p class="lead">Every agent on this page, where it runs, what it does and whether it is running right now. No agent can change the network on its own; a person approves every change.</p>
     <div class="card">
       <h2>Agents</h2>
+      <div class="handflow" aria-label="Hand-off order">
+        <p><b>Review:</b> <span class="hf">Network telemetry</span> → <span class="hf a">1 Diagnosis</span> → <span class="hf a">2 Change-safety</span> → <span class="hf op">Operator decides</span></p>
+        <p><b>Audit, on each element:</b> <span class="hf op">Operator presses Audit</span> → <span class="hf a">1 Audit lead plans</span> → <span class="hf a">2 Reachability</span> → <span class="hf a">3 Performance, Radio or Path</span> → <span class="hf a">4 Config</span> → <span class="hf a">5 Security</span> → <span class="hf a">6 Audit lead writes verdict</span> → <span class="hf op">Operator: open fix or correct</span></p>
+        <p class="logged">Each agent hands its result back to the one that assigned it. Only checks that apply to an element run, so a switch skips Radio and Path. An audit fix opens in Review, where the Diagnosis and Change-safety agents take over.</p>
+      </div>
       <div class="table-scroll"><table class="data" id="agents-table"></table></div>
     </div>
     <div class="card" style="margin-top: 20px">
@@ -2272,16 +2285,17 @@ body { padding-bottom: 72px; }
 
 
   // ---------- Agents tab ----------
+  // [name, runs in, step, gets work from, hands off to, definition, data]
   const AGENT_DEFS = [
-    ["Diagnosis agent", "Review", "Reads network telemetry and proposes a fix with evidence and a confidence level.", "Telemetry, flow data, past outcomes"],
-    ["Change-safety agent", "Review", "Checks each proposed fix on its own against what the diagnosis agent cannot see: change freezes, other services on the device, who must be told.", "Change calendar, device inventory, rollback history"],
-    ["Audit lead", "Network health", "Plans the audit route from carriers to endpoints, assigns each check to an agent and writes each verdict.", "Results from the other audit agents"],
-    ["Reachability agent", "Network health", "Checks that each element is up and answering: links, sessions, tunnels, members.", "SNMP, BGP session state"],
-    ["Performance agent", "Network health", "Checks load, memory, loss, latency and jitter against normal ranges and trends.", "SNMP counters, IPFIX flow records"],
-    ["Config agent", "Network health", "Compares firmware and configuration to the approved baseline and vendor advisories.", "NETCONF, OpenConfig, vendor advisories"],
-    ["Radio agent", "Network health", "Checks Wi-Fi channels, retry rates and neighboring networks.", "Wireless controller telemetry"],
-    ["Path agent", "Network health", "Traces traffic hop by hop to find where loss or delay starts, including carrier hops.", "Path traces, Internet measurement data"],
-    ["Security agent", "Network health", "Flags unusual traffic by host and checks devices against known exploited vulnerabilities.", "DNS logs, vulnerability catalogs"]
+    ["Diagnosis agent", "Review", "Review 1", "Network telemetry", "Change-safety agent", "Reads network telemetry and proposes a fix with evidence and a confidence level.", "Telemetry, flow data, past outcomes"],
+    ["Change-safety agent", "Review", "Review 2", "Diagnosis agent", "Operator (hand-back)", "Checks each proposed fix on its own against what the diagnosis agent cannot see: change freezes, other services on the device, who must be told.", "Change calendar, device inventory, rollback history"],
+    ["Audit lead", "Network health", "Audit 1 and 6", "Operator (Audit button), then each audit agent", "Reachability agent first; verdicts to the operator", "Plans the audit route from carriers to endpoints, assigns each check to an agent and writes each verdict.", "Results from the other audit agents"],
+    ["Reachability agent", "Network health", "Audit 2", "Audit lead", "Audit lead", "Checks that each element is up and answering: links, sessions, tunnels, members.", "SNMP, BGP session state"],
+    ["Performance agent", "Network health", "Audit 3", "Audit lead", "Audit lead", "Checks load, memory, loss, latency and jitter against normal ranges and trends.", "SNMP counters, IPFIX flow records"],
+    ["Radio agent", "Network health", "Audit 3 (Wi-Fi only)", "Audit lead", "Audit lead", "Checks Wi-Fi channels, retry rates and neighboring networks.", "Wireless controller telemetry"],
+    ["Path agent", "Network health", "Audit 3 (WAN and carriers)", "Audit lead", "Audit lead", "Traces traffic hop by hop to find where loss or delay starts, including carrier hops.", "Path traces, Internet measurement data"],
+    ["Config agent", "Network health", "Audit 4", "Audit lead", "Audit lead", "Compares firmware and configuration to the approved baseline and vendor advisories.", "NETCONF, OpenConfig, vendor advisories"],
+    ["Security agent", "Network health", "Audit 5", "Audit lead", "Audit lead", "Flags unusual traffic by host and checks devices against known exploited vulnerabilities.", "DNS logs, vulnerability catalogs"]
   ];
   function agentStatus(name, where) {
     if (where === "Review") {
@@ -2296,8 +2310,8 @@ body { padding-bottom: 72px; }
   }
   function renderAgents() {
     const t = $("#agents-table"); if (!t) return;
-    t.innerHTML = `<thead><tr><th scope="col">Agent</th><th scope="col">Runs in</th><th scope="col">Status now</th><th scope="col">Definition</th><th scope="col">Data it uses</th><th scope="col">Can change the network</th></tr></thead>
-      <tbody>${AGENT_DEFS.map(([n, w, d, data]) => { const st = agentStatus(n, w); return `<tr><td><b>${esc(n)}</b></td><td>${esc(w)}</td><td><span class="pill ${st.cls}">${esc(st.label)}</span></td><td>${esc(d)}</td><td>${esc(data)}</td><td>No, a person approves</td></tr>`; }).join("")}</tbody>`;
+    t.innerHTML = `<thead><tr><th scope="col">Agent</th><th scope="col">Step</th><th scope="col">Gets work from</th><th scope="col">Hands off to</th><th scope="col">Status now</th><th scope="col">Definition</th><th scope="col">Data it uses</th><th scope="col">Can change the network</th></tr></thead>
+      <tbody>${AGENT_DEFS.map(([n, w, step, from, to, d, data]) => { const st = agentStatus(n, w); return `<tr><td><b>${esc(n)}</b></td><td class="mono">${esc(step)}</td><td>${esc(from)}</td><td>${esc(to)}</td><td><span class="pill ${st.cls}">${esc(st.label)}</span></td><td>${esc(d)}</td><td>${esc(data)}</td><td>No, a person approves</td></tr>`; }).join("")}</tbody>`;
   }
 
   // ---------- Tabs ----------
