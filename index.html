@@ -486,6 +486,176 @@ html[data-motion="off"] .qitem:hover, html[data-motion="off"] .esc:hover, html[d
 html[data-motion="off"]::view-transition-old(root), html[data-motion="off"]::view-transition-new(root) { animation: none; }
 @media (prefers-reduced-motion: reduce) { body::before { animation: none; } }
 </style>
+<style id="ops">
+/* Ops layer (2026–27): network-operations glass UI. Text at 2x (root 32px), grid backdrop with a slow scan line, glowing data,
+   mono numerics, live status. Layout reflows earlier so the larger text never gets cramped. */
+html { font-size: 32px; }
+body { font-size: 1rem !important; line-height: 1.45; }
+:root {
+  --nm-base: #e9eff4; --nm-well: #dde5ec; --grid: rgba(31,79,154,.075); --scan: rgba(42,120,214,.10);
+  --glow-1: 0 0 18px color-mix(in srgb, var(--s1) 45%, transparent);
+  --s1: #1f6fd1; --accent: #0a6862; --ai: #5b47b8;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --grid: rgba(127,176,245,.07); --scan: rgba(127,176,245,.10); --s1: #4f9cf0; --accent: #3fb3a8; --ai: #a797ff; } }
+:root[data-theme="dark"] { --grid: rgba(127,176,245,.07); --scan: rgba(127,176,245,.10); --s1: #4f9cf0; --accent: #3fb3a8; --ai: #a797ff; }
+
+/* Backdrop: fine engineering grid plus one slow scan line */
+body::after {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    linear-gradient(180deg, transparent 0, var(--scan) 50%, transparent 100%) 0 -30vh / 100% 30vh no-repeat,
+    linear-gradient(var(--grid) 1px, transparent 1px) 0 0 / 56px 56px,
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0 / 56px 56px;
+  animation: scan 11s linear infinite;
+}
+@keyframes scan { to { background-position: 0 130vh, 0 0, 0 0; } }
+html[data-motion="off"] body::after { animation: none; background-position: 0 -40vh, 0 0, 0 0; }
+@media (prefers-reduced-motion: reduce) { html:not([data-motion="on"]) body::after { animation: none; } }
+
+.wrap { max-width: 1840px !important; }
+.mono, .kpi .val, .meter .big, .dmeta .mono, .rrow .v, .rrow .sh, .bn, td.num { font-family: var(--font-mono) !important; font-variant-numeric: tabular-nums; }
+.brand h1 { font-size: 1.5rem !important; letter-spacing: -.01em; }
+.brand h1::before { content: ""; display: inline-block; width: .42em; height: .42em; border-radius: 50%; background: var(--accent); margin-right: .35em; vertical-align: .12em; box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 60%, transparent); animation: beacon 2.4s ease-out infinite; }
+@keyframes beacon { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 60%, transparent); } 100% { box-shadow: 0 0 0 .6em transparent; } }
+.tag, .m-toggle { white-space: normal; font-size: .8125rem !important; }
+.m-toggle { min-height: 1.5em; padding: 4px 14px 4px 8px; }
+.m-toggle .knob { width: 1.6em; height: .95em; }
+.m-toggle .knob::after { width: .7em; height: .7em; }
+.m-toggle[aria-pressed="true"] .knob::after { transform: translateX(.65em); }
+.live { display: inline-flex; align-items: center; gap: .4em; font-size: .8125rem; font-weight: 700; color: var(--accent); font-family: var(--font-mono); }
+.live i { width: .5em; height: .5em; border-radius: 50%; background: currentColor; animation: blink 1.4s ease-in-out infinite; }
+@keyframes blink { 50% { opacity: .25; } }
+
+/* Icons and small fixed sizes follow the text */
+.pill svg, .says .who svg, .btn svg, .result .r-title svg { width: 1em !important; height: 1em !important; }
+.legend i { width: .75em; height: .75em; }
+.conf { grid-template-columns: 3.2em auto; }
+.conf .bar { height: 10px; }
+.kpi svg { height: 56px; }
+.rrow { min-height: 2.4em; }
+.rrow .trk { height: 6px; }
+.band-bar { height: 28px; }
+.events { max-height: 720px; }
+table.data { min-width: 960px; }
+.patterns { grid-template-columns: repeat(auto-fill, minmax(min(100%, 480px), 1fr)); }
+.insights { grid-template-columns: repeat(auto-fit, minmax(min(100%, 520px), 1fr)); }
+.chart .tip { white-space: normal; max-width: min(80vw, 640px); font-size: .75rem; font-family: var(--font-mono); background: var(--ink); color: var(--nm-base); box-shadow: 0 8px 24px rgba(0,0,0,.25); z-index: 5; }
+
+/* Reflow for 2x text */
+.review { grid-template-columns: minmax(440px, 560px) minmax(0, 1fr) !important; }
+.cols { grid-template-columns: minmax(0, 1fr) !important; }
+.grid2 { grid-template-columns: minmax(0, 1fr) !important; }
+.queue, #queue, .ranked, .rrow { min-width: 0; }
+.queue, #queue { grid-template-columns: minmax(0, 1fr); }
+.qitem .row1, .queue-head { flex-wrap: wrap; }
+.qitem .ttl { overflow-wrap: anywhere; }
+.panels { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+.kpis { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+.kpi { border-right: 1px solid var(--line) !important; border-bottom: 1px solid var(--line) !important; }
+.kpi:nth-child(3n) { border-right: 0 !important; }
+.kpi:nth-last-child(-n+3) { border-bottom: 0 !important; }
+@media (max-width: 1300px) {
+  .review { grid-template-columns: minmax(0, 1fr) !important; }
+  .queue #queue { grid-template-columns: repeat(auto-fill, minmax(min(100%, 520px), 1fr)); }
+  .panels { grid-template-columns: minmax(0, 1fr) !important; }
+}
+@media (max-width: 900px) {
+  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .kpi:nth-child(3n) { border-right: 1px solid var(--line) !important; }
+  .kpi:nth-child(2n) { border-right: 0 !important; }
+  .kpi:nth-last-child(-n+3) { border-bottom: 1px solid var(--line) !important; }
+  .kpi:nth-last-child(-n+2) { border-bottom: 0 !important; }
+}
+@media (max-width: 620px) {
+  .kpis { grid-template-columns: minmax(0, 1fr) !important; }
+  .kpi { border-right: 0 !important; border-bottom: 1px solid var(--line) !important; }
+  .kpi:last-child { border-bottom: 0 !important; }
+  .detail { padding: 14px !important; }
+  .a2a .flow { grid-template-columns: 1fr !important; }
+  .card, .a2a, .says, .panel, .result { padding: 14px !important; }
+  .says { grid-template-columns: 1fr !important; }
+  .dhead h2 { font-size: 1.15rem !important; }
+  .brand h1 { font-size: 1.25rem !important; }
+  .btn { flex: 1 1 100%; justify-content: center; }
+  .tab { padding: 8px 12px !important; white-space: nowrap; flex: none; }
+  nav.tabs { flex-wrap: nowrap !important; overflow-x: auto; scrollbar-width: none; }
+  table.kv th { width: auto; display: block; padding-bottom: 0; border-bottom: 0; }
+  table.kv td { display: block; }
+  .change { font-size: 1rem; }
+  .topo .node-lbl { font-size: 17px; }
+  .rrow .nm { white-space: normal; overflow: visible; line-height: 1.2; }
+  .rrow { padding-bottom: 14px; }
+}
+
+/* Viz: shared look for every D3 chart */
+.viz { display: block; overflow: visible; max-width: 100%; }
+.viz text { font-family: var(--font-mono); font-size: 20px; fill: var(--ink-3); }
+.viz .lbl-strong { fill: var(--ink); font-weight: 700; font-size: 22px; }
+.viz .grid line { stroke: var(--line); }
+.viz .axis path, .viz .axis line { stroke: var(--line); }
+.viz .glow { filter: drop-shadow(0 0 6px color-mix(in srgb, var(--s1) 55%, transparent)); }
+.viz .glow-ai { filter: drop-shadow(0 0 6px color-mix(in srgb, var(--ai) 55%, transparent)); }
+.viz .glow-acc { filter: drop-shadow(0 0 6px color-mix(in srgb, var(--accent) 55%, transparent)); }
+.viz .pulse { transform-box: fill-box; transform-origin: center; animation: ring 1.8s ease-out infinite; }
+@keyframes ring { 0% { transform: scale(1); opacity: .7; } 100% { transform: scale(3.2); opacity: 0; } }
+.viz-box { position: relative; min-width: 0; }
+.viz-cap { font-size: .75rem; color: var(--ink-3); display: flex; flex-wrap: wrap; gap: 4px 16px; justify-content: space-between; align-items: baseline; }
+.viz-cap b { color: var(--ink); }
+
+/* Topology + live feed */
+.ops-row { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 22px; }
+@media (max-width: 1500px) { .ops-row { grid-template-columns: minmax(0, 1fr); } }
+.topo { border-radius: 16px; background: color-mix(in srgb, var(--nm-well) 70%, transparent); box-shadow: var(--nm-inset-sm); overflow: hidden; }
+.topo .node-lbl { font-size: 19px; fill: var(--ink-2); paint-order: stroke; stroke: var(--nm-base); stroke-width: 5px; stroke-linejoin: round; }
+.topo .link { stroke: color-mix(in srgb, var(--ink-3) 60%, transparent); stroke-width: 3.5; }
+.topo .pkt { filter: drop-shadow(0 0 6px currentColor); }
+.topo .link.bad { stroke: var(--crit); stroke-width: 3.5; stroke-dasharray: 10 7; animation: dash 1s linear infinite; }
+@keyframes dash { to { stroke-dashoffset: -14; } }
+.topo .pkt { fill: var(--s1); }
+.topo .pkt.bad { fill: var(--crit); }
+.livefeed { border-radius: 16px; padding: 14px 16px; background: color-mix(in srgb, var(--nm-well) 70%, transparent); box-shadow: var(--nm-inset-sm); display: grid; gap: 6px; align-content: start; }
+.livefeed .now { font-family: var(--font-mono); font-size: 1.6rem; font-weight: 500; line-height: 1.05; color: var(--ink); font-variant-numeric: tabular-nums; }
+.livefeed .now small { font-size: .7rem; color: var(--ink-3); font-family: var(--font-body); margin-left: .4em; }
+
+/* Padding inside lifted blocks and wells */
+.detail .block, .card .block { padding: 18px 20px; }
+.evidence { padding: 12px 18px !important; }
+.a2a .note, .says, .block .note { padding: 10px 16px; }
+
+/* Confidence gauge */
+.gauge { display: block; max-width: 100%; }
+
+/* Agent-to-agent handoff: the proposal travels to the checker, the verdict travels back */
+.a2a .hand { display: grid; justify-items: center; gap: 6px; min-width: 7.5em; }
+.lane { position: relative; display: block; width: 7em; height: 1em; }
+.lane::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; border-top: 3px dotted color-mix(in srgb, var(--ai) 50%, transparent); }
+.lane .pkt { position: absolute; top: 50%; width: .55em; height: .55em; margin-top: -.275em; border-radius: 50%; }
+.lane .out { background: var(--ai); box-shadow: 0 0 12px var(--ai); animation: laneOut 4.2s cubic-bezier(.65,0,.35,1) infinite; }
+.lane .back { background: var(--good); box-shadow: 0 0 12px var(--good); animation: laneBack 4.2s cubic-bezier(.65,0,.35,1) infinite; opacity: 0; }
+.lane .back.no { background: var(--crit); box-shadow: 0 0 12px var(--crit); }
+@keyframes laneOut { 0% { left: 0; opacity: 0; } 8% { opacity: 1; } 42% { left: calc(100% - .55em); opacity: 1; } 50%, 100% { left: calc(100% - .55em); opacity: 0; } }
+@keyframes laneBack { 0%, 50% { left: calc(100% - .55em); opacity: 0; } 58% { opacity: 1; } 92% { left: 0; opacity: 1; } 100% { left: 0; opacity: 0; } }
+.a2a .agent { position: relative; overflow: hidden; }
+.a2a .agent::after { content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, color-mix(in srgb, var(--ai) 16%, transparent) 50%, transparent 70%); transform: translateX(-100%); animation: sheen 4.2s ease-in-out infinite; }
+.a2a .agent + .hand + .agent::after { animation-delay: 1.8s; }
+@keyframes sheen { 0%, 20% { transform: translateX(-100%); } 45%, 100% { transform: translateX(100%); } }
+.a2a .verdict { animation: verdictIn .6s var(--ease-spring, ease) both; }
+@keyframes verdictIn { from { opacity: 0; transform: translateY(8px) scale(.97); } }
+@media (max-width: 620px) { .a2a .hand { transform: rotate(90deg); margin: .6em 0; } }
+
+/* Growth animations for lists and bars */
+.rrow .trk i { transform-origin: left; animation: grow .9s var(--ease-out, ease) both; }
+.rrow:nth-child(2) .trk i { animation-delay: .06s; } .rrow:nth-child(3) .trk i { animation-delay: .12s; } .rrow:nth-child(4) .trk i { animation-delay: .18s; } .rrow:nth-child(5) .trk i { animation-delay: .24s; } .rrow:nth-child(6) .trk i { animation-delay: .3s; }
+.band-bar span { transform-origin: left; animation: grow 1s var(--ease-out, ease) both; }
+.band-row:nth-child(2) .band-bar span { animation-delay: .1s; } .band-row:nth-child(3) .band-bar span { animation-delay: .2s; }
+.conf .bar i { transform-origin: left; animation: grow .9s var(--ease-out, ease) both; }
+@keyframes grow { from { transform: scaleX(0); } }
+.kpi svg { animation: wipe 1.3s var(--ease-out, ease); }
+.mc-legend { flex-wrap: wrap; } .mc-legend span { white-space: nowrap; }
+@keyframes wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+.kpi[aria-pressed="true"] .in { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--accent) 50%, transparent), 0 0 24px color-mix(in srgb, var(--accent) 22%, transparent) !important; }
+.qitem[aria-current="true"] { box-shadow: var(--nm-inset), 0 0 0 2px var(--accent), 0 0 22px color-mix(in srgb, var(--accent) 25%, transparent) !important; }
+</style>
 </head>
 <body>
 
@@ -496,6 +666,7 @@ html[data-motion="off"]::view-transition-old(root), html[data-motion="off"]::vie
       <p>AI recommendations an operator can question, correct and teach</p>
     </div>
     <div class="tags">
+      <span class="live"><i></i>Telemetry streaming · simulated</span>
       <span class="tag">Simulated network · example data</span>
       <span class="tag">Self-initiated concept · Elizabeth Hannan</span>
     </div>
@@ -655,6 +826,7 @@ html[data-motion="off"]::view-transition-old(root), html[data-motion="off"]::vie
   </footer>
 </main>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 <script>
 (() => {
   "use strict";
@@ -964,7 +1136,7 @@ html[data-motion="off"]::view-transition-old(root), html[data-motion="off"]::vie
       <h3>Agent review</h3>
       <div class="flow">
         <div class="agent"><b>Diagnosis agent</b><span>Reads network telemetry and proposes the fix above.</span></div>
-        <div class="hand" aria-hidden="true">hands off →</div>
+        <div class="hand" aria-hidden="true"><span class="lane"><i class="pkt out"></i><i class="pkt back${a.agrees ? "" : " no"}"></i></span><span>hands off →</span></div>
         <div class="agent"><b>Change-safety agent</b><span>Checks the proposal on its own, against what the first agent cannot see.</span></div>
       </div>
       <p class="verdict ${a.agrees ? "agree" : "disagree"}">Change-safety agent: ${esc(a.verdict)}</p>
@@ -994,8 +1166,8 @@ html[data-motion="off"]::view-transition-old(root), html[data-motion="off"]::vie
       sure = `<div class="block"><h3>How sure</h3>
         <div class="meter">
           <div class="big">${pct}%<small>${band(r.confidence)} confidence</small></div>
-          <div class="track" role="img" aria-label="${pct} percent confidence"><i style="width:${pct}%"></i></div>
-          <div class="ticks"><span>0</span><span>60</span><span>80</span><span>100</span></div>
+          ${HAS_D3 ? `<div id="gauge-box"></div>` : `<div class="track" role="img" aria-label="${pct} percent confidence"><i style="width:${pct}%"></i></div>
+          <div class="ticks"><span>0</span><span>60</span><span>80</span><span>100</span></div>`}
         </div>
         <p class="note"><b>Track record:</b> operators accepted ${r.calib.accepted}% of ${esc(r.calib.kind)} at this confidence and rolled back ${r.calib.rolledBack}%.</p>
         <p class="note"><b>What would change my mind:</b> ${esc(r.mind)}</p></div>`;
@@ -1023,9 +1195,13 @@ html[data-motion="off"]::view-transition-old(root), html[data-motion="off"]::vie
       </div>
       <div class="says"><span class="who">${ICON.ai}AI says</span><p>${esc(r.says)}</p></div>
       ${a2aBlock(r)}
+      ${HAS_D3 && TOPO[r.id] ? `<div class="ops-row">
+        <div class="block"><h3>Network map</h3><div class="topo" id="topo"></div><p class="viz-cap"><span>${esc(TOPO[r.id].cap)}</span><span>Simulated</span></p></div>
+        <div class="block"><h3>Live feed</h3><div class="livefeed" id="live"></div></div>
+      </div>` : ""}
       <div class="cols">
         <div class="block"><h3>Why</h3>
-          ${lineChart(ev0, r.id)}
+          ${HAS_D3 ? `<div class="chart viz-box" id="ev-chart"></div>` : lineChart(ev0, r.id)}
           <p class="chart-cap">${esc(ev0.label)}. Now <b>${esc(ev0.now)}</b>${ev0.base ? `, ${esc(ev0.base)}` : ""}.</p>
           ${others.length ? `<ul class="evidence">${others.map((e) => `<li><span class="lab">${esc(e.label)}</span><span class="val">${esc(e.now)}${e.base ? ` <span>· ${esc(e.base)}</span>` : ""}</span></li>`).join("")}</ul>` : ""}
         </div>
@@ -1033,7 +1209,7 @@ html[data-motion="off"]::view-transition-old(root), html[data-motion="off"]::vie
       </div>
       ${changeBlock}
       <div id="decision"></div>`;
-    $("#detail").querySelectorAll(".chart").forEach(wireChart);
+    if (HAS_D3) drawDetailViz(); else $("#detail").querySelectorAll(".chart").forEach(wireChart);
     renderDecision();
   }
   function currentTo(r) {
@@ -1269,7 +1445,7 @@ html[data-motion="off"]::view-transition-old(root), html[data-motion="off"]::vie
     const max = Math.max(...v), min = Math.min(...v), span = max - min || 1;
     const pts = vals.map((x, i) => (x == null ? null : [(i / (vals.length - 1)) * W, H - 3 - ((x - min) / span) * (H - 6)])).filter(Boolean);
     const d = pts.map((p, i) => `${i ? "L" : "M"}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join("");
-    return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><path d="${d}" fill="none" stroke="${color}" stroke-width="1.5" vector-effect="non-scaling-stroke"/></svg>`;
+    return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><path class="spk" d="${d}" fill="none" stroke="${color}" stroke-width="2.5" vector-effect="non-scaling-stroke"/></svg>`;
   }
   function niceTicks(max, count = 4) {
     if (!(max > 0)) return [0, 1];
@@ -1343,6 +1519,7 @@ html[data-motion="off"]::view-transition-old(root), html[data-motion="off"]::vie
       + `<p class="chart-cap" style="margin:6px 4px 0">${total} ${noun} in the last ${state.range} days${withRate ? "; right column is the share accepted as is" : "; shares add to 100%"}.</p>`;
   }
   function drawMain(now, before, m, from) {
+    if (HAS_D3) return drawMainD3(now, before, m, from);
     const el = $("#main-chart");
     const W = Math.max(300, Math.round(el.clientWidth || 900)), H = W < 600 ? 200 : 240, padL = 48, padR = 12, padT = 12, padB = 28, n = now.length;
     const vals = now.concat(before).filter((v) => v != null);
@@ -1436,6 +1613,335 @@ html[data-motion="off"]::view-transition-old(root), html[data-motion="off"]::vie
     el.innerHTML = state.events.map((e) => `${e.t}  <span class="ev-name">${e.name}</span> ${esc(JSON.stringify(e.fields))}`).join("\n");
   }
 
+  // ---------- D3 visualizations (animated; motion respects the Motion switch and reduced-motion) ----------
+  const HAS_D3 = typeof window.d3 !== "undefined";
+  const MOTION = () => { const m = document.documentElement.dataset.motion; return m ? m !== "off" : !matchMedia("(prefers-reduced-motion: reduce)").matches; };
+  const DUR = (ms) => (MOTION() ? ms : 0);
+  const num = (s) => parseFloat(String(s).replace(/,/g, ""));
+  let uid = 0;
+  const vizTimers = new Set();
+  function stopViz() { vizTimers.forEach((t) => (t.stop ? t.stop() : clearInterval(t))); vizTimers.clear(); }
+  function glowDefs(svg) {
+    const id = "g" + (++uid);
+    const defs = svg.append("defs");
+    const lg = defs.append("linearGradient").attr("id", id + "a").attr("x1", 0).attr("x2", 0).attr("y1", 0).attr("y2", 1);
+    lg.append("stop").attr("offset", 0).attr("stop-color", "var(--s1)").attr("stop-opacity", 0.32);
+    lg.append("stop").attr("offset", 1).attr("stop-color", "var(--s1)").attr("stop-opacity", 0);
+    const la = defs.append("linearGradient").attr("id", id + "b").attr("x1", 0).attr("x2", 0).attr("y1", 0).attr("y2", 1);
+    la.append("stop").attr("offset", 0).attr("stop-color", "var(--accent)").attr("stop-opacity", 0.28);
+    la.append("stop").attr("offset", 1).attr("stop-color", "var(--accent)").attr("stop-opacity", 0);
+    defs.append("clipPath").attr("id", id + "c").append("rect");
+    return id;
+  }
+  function drawIn(path, ms) {
+    const node = path.node(); if (!node || !MOTION()) return;
+    const L = node.getTotalLength(), keep = path.attr("stroke-dasharray");
+    if (keep) { path.style("opacity", 0).transition().duration(ms).style("opacity", 1); return; }
+    path.attr("stroke-dasharray", `${L} ${L}`).attr("stroke-dashoffset", L).transition().duration(ms).ease(d3.easeCubicOut).attr("stroke-dashoffset", 0).on("end", () => path.attr("stroke-dasharray", null));
+  }
+  function placeTip(tip, el, px) {
+    const w = el.getBoundingClientRect().width;
+    tip.hidden = false; tip.style.top = "6px"; tip.style.transform = "translate(-50%, 0)";
+    const tw = tip.getBoundingClientRect().width || 200;
+    tip.style.left = Math.min(Math.max(px, tw / 2 + 4), w - tw / 2 - 4) + "px";
+  }
+
+  // Evidence ("Why") line chart
+  function drawEvidence(el, ev, rec) {
+    el.innerHTML = "";
+    const W = Math.max(280, Math.floor(el.getBoundingClientRect().width)), narrow = W < 640;
+    const H = narrow ? 300 : 360, mg = { t: 34, r: narrow ? 20 : 190, b: 50, l: narrow ? 78 : 96 };
+    const pts = ev.series, n = pts.length + (ev.forecast != null ? 1 : 0), last = pts.length - 1;
+    const all = pts.concat(ev.baseline != null ? [ev.baseline] : [], ev.forecast != null ? [ev.forecast] : []);
+    const y = d3.scaleLinear().domain([Math.min(0, d3.min(all)), d3.max(all)]).nice(4).range([H - mg.b, mg.t]);
+    const x = d3.scaleLinear().domain([0, n - 1]).range([mg.l, W - mg.r]);
+    const step = y.ticks(4)[1] - y.ticks(4)[0];
+    const fmt = (v) => (step < 1 ? v.toFixed(1) : Math.round(v).toLocaleString()) + (ev.unit || "");
+    const raw = (v) => (+v).toLocaleString("en-US", { maximumFractionDigits: 1 }) + (ev.unit || "");
+    const svg = d3.select(el).append("svg").attr("class", "viz").attr("width", W).attr("height", H)
+      .attr("role", "img").attr("tabindex", 0).attr("aria-label", `${ev.label}: now ${ev.now}${ev.base ? ", " + ev.base : ""}`);
+    const id = glowDefs(svg);
+    const g = svg.append("g").attr("class", "grid");
+    y.ticks(4).forEach((v) => {
+      g.append("line").attr("x1", mg.l).attr("x2", W - mg.r).attr("y1", y(v)).attr("y2", y(v));
+      g.append("text").attr("x", mg.l - 10).attr("y", y(v) + 7).attr("text-anchor", "end").text(fmt(v));
+    });
+    if (ev.baseline != null) {
+      const by = y(ev.baseline);
+      svg.append("line").attr("x1", mg.l).attr("x2", W - mg.r).attr("y1", by).attr("y2", by).attr("stroke", "var(--ink-3)").attr("stroke-dasharray", "5 6").attr("stroke-width", 2);
+      const bl = ev.baselineLabel || `typical ${raw(ev.baseline)}`;
+      if (narrow) svg.append("text").attr("x", W - mg.r).attr("y", by - 10).attr("text-anchor", "end").text(bl);
+      else svg.append("text").attr("x", W - mg.r + 12).attr("y", by + 7).text(bl);
+    }
+    const line = d3.line().x((v, i) => x(i)).y((v) => y(v)).curve(d3.curveMonotoneX);
+    const area = d3.area().x((v, i) => x(i)).y0(y(Math.max(0, y.domain()[0]))).y1((v) => y(v)).curve(d3.curveMonotoneX);
+    const ar = svg.append("path").attr("d", area(pts)).attr("fill", `url(#${id}a)`).attr("opacity", 0);
+    ar.transition().delay(DUR(500)).duration(DUR(700)).attr("opacity", 1);
+    const p = svg.append("path").attr("class", "glow").attr("d", line(pts)).attr("fill", "none").attr("stroke", "var(--s1)").attr("stroke-width", 4).attr("stroke-linecap", "round");
+    drawIn(p, 1300);
+    const ex = x(last), ey = y(pts[last]);
+    const endG = svg.append("g").attr("opacity", MOTION() ? 0 : 1);
+    endG.append("circle").attr("class", "pulse").attr("cx", ex).attr("cy", ey).attr("r", 7).attr("fill", "var(--s1)");
+    endG.append("circle").attr("cx", ex).attr("cy", ey).attr("r", 8).attr("fill", "var(--s1)").attr("stroke", "var(--nm-base)").attr("stroke-width", 3);
+    if (ev.forecast != null) {
+      const fx = x(last + 1), fy = y(ev.forecast);
+      endG.append("path").attr("d", `M${ex},${ey}L${fx},${fy}`).attr("stroke", "var(--s1)").attr("stroke-width", 3).attr("stroke-dasharray", "7 7").attr("fill", "none");
+      endG.append("circle").attr("cx", fx).attr("cy", fy).attr("r", 8).attr("fill", "var(--nm-base)").attr("stroke", "var(--s1)").attr("stroke-width", 3);
+      endG.append("text").attr("class", "lbl-strong").attr("x", narrow ? fx - 12 : fx + 14).attr("y", narrow ? fy - 16 : fy + 7).attr("text-anchor", narrow ? "end" : "start").text(`${raw(ev.forecast)} forecast`);
+    } else {
+      endG.append("text").attr("class", "lbl-strong").attr("x", narrow ? ex - 12 : ex + 16).attr("y", narrow ? ey - 18 : ey + 8).attr("text-anchor", narrow ? "end" : "start").text(raw(pts[last]));
+    }
+    endG.transition().delay(DUR(1200)).duration(DUR(400)).attr("opacity", 1);
+    svg.append("text").attr("x", mg.l).attr("y", H - 12).text(ev.xlab[0]);
+    svg.append("text").attr("x", ex).attr("y", H - 12).attr("text-anchor", "end").text(ev.xlab[1]);
+    const xh = svg.append("line").attr("y1", mg.t).attr("y2", H - mg.b).attr("stroke", "var(--ink-3)").attr("stroke-width", 1.5).attr("visibility", "hidden");
+    const dot = svg.append("circle").attr("r", 8).attr("fill", "var(--s1)").attr("stroke", "var(--nm-base)").attr("stroke-width", 3).attr("visibility", "hidden");
+    svg.append("rect").attr("x", mg.l).attr("y", mg.t).attr("width", W - mg.l - mg.r).attr("height", H - mg.t - mg.b).attr("fill", "transparent");
+    const tip = document.createElement("div"); tip.className = "tip"; tip.hidden = true; el.appendChild(tip);
+    let seen = false, ki = last;
+    const show = (i) => {
+      const v = i < pts.length ? pts[i] : ev.forecast;
+      xh.attr("x1", x(i)).attr("x2", x(i)).attr("visibility", "visible");
+      dot.attr("cx", x(i)).attr("cy", y(v)).attr("visibility", "visible");
+      tip.textContent = `${i < pts.length ? pointLabel(ev, i, pts.length) : "forecast"}: ${v}${ev.unit || ""}`;
+      placeTip(tip, el, x(i));
+      if (!seen) { seen = true; emit("evidence_viewed", { rec_id: rec.id, evidence_id: ev.id }); }
+    };
+    const hide = () => { tip.hidden = true; xh.attr("visibility", "hidden"); dot.attr("visibility", "hidden"); };
+    const node = svg.node();
+    node.addEventListener("pointermove", (e) => { const r = node.getBoundingClientRect(); ki = Math.max(0, Math.min(n - 1, Math.round(x.invert(e.clientX - r.left)))); show(ki); });
+    node.addEventListener("pointerleave", hide);
+    node.addEventListener("focus", () => show(ki)); node.addEventListener("blur", hide);
+    node.addEventListener("keydown", (e) => { if (e.key === "ArrowLeft") { ki = Math.max(0, ki - 1); show(ki); e.preventDefault(); } if (e.key === "ArrowRight") { ki = Math.min(n - 1, ki + 1); show(ki); e.preventDefault(); } });
+  }
+
+  // Confidence gauge: zones for the three bands, the value sweeps in
+  function drawGauge(el, pct) {
+    el.innerHTML = "";
+    const W = Math.min(520, Math.max(240, Math.floor(el.getBoundingClientRect().width))), R = W / 2 - 10, H = R + 56;
+    const svg = d3.select(el).append("svg").attr("class", "viz gauge").attr("width", W).attr("height", H).attr("role", "img").attr("aria-label", `${pct} percent confidence`);
+    const g = svg.append("g").attr("transform", `translate(${W / 2},${R + 10})`);
+    const A = (f) => -Math.PI / 2 + f * Math.PI;
+    const arc = d3.arc().innerRadius(R * 0.74).outerRadius(R).cornerRadius(4);
+    [[0, 0.6, "var(--crit)"], [0.6, 0.8, "var(--warn)"], [0.8, 1, "var(--good)"]].forEach(([a, b, c]) =>
+      g.append("path").attr("d", arc({ startAngle: A(a) + 0.01, endAngle: A(b) - 0.01 })).attr("fill", c).attr("opacity", 0.16));
+    const val = g.append("path").attr("class", "glow-ai").attr("fill", "var(--ai)");
+    const needle = g.append("line").attr("x1", 0).attr("y1", 0).attr("x2", 0).attr("y2", -R * 0.66).attr("stroke", "var(--ink)").attr("stroke-width", 4).attr("stroke-linecap", "round");
+    g.append("circle").attr("r", 10).attr("fill", "var(--ink)");
+    [0, 60, 80, 100].forEach((t) => {
+      const a = A(t / 100), rr = R + 24;
+      g.append("text").attr("x", Math.sin(a) * rr).attr("y", -Math.cos(a) * rr + (t === 0 || t === 100 ? 26 : 4)).attr("text-anchor", t === 0 ? "start" : t === 100 ? "end" : "middle").text(t);
+    });
+    const tw = (f) => { val.attr("d", arc({ startAngle: A(0), endAngle: A(f) })); needle.attr("transform", `rotate(${-90 + f * 180})`); };
+    if (!MOTION()) { tw(pct / 100); return; }
+    tw(0);
+    g.transition().duration(1400).ease(d3.easeElasticOut.amplitude(1).period(0.55)).tween("v", () => { const i = d3.interpolate(0, pct / 100); return (t) => tw(Math.min(1, Math.max(0, i(t)))); });
+  }
+
+  // Network map for the open recommendation: force layout, packets flowing, the problem highlighted
+  const TOPO = {
+    "R-1042": { nodes: [["core", "Core switch", "core"], ["dist", "Building B", "sw"], ["ap1", "AP 3-01", "ap", 1], ["ap2", "AP 3-02", "ap", 1], ["ap3", "AP 3-03", "ap", 1], ["nb", "Neighbor Wi-Fi", "ext"], ["cl", "42 clients", "cl"]],
+      links: [["core", "dist"], ["dist", "ap1"], ["dist", "ap2"], ["dist", "ap3"], ["ap1", "cl"], ["ap2", "cl"], ["ap3", "cl"], ["nb", "ap1", 1], ["nb", "ap2", 1], ["nb", "ap3", 1]], cap: "Three access points share channel 36 with a neighbor network" },
+    "R-1043": { nodes: [["rt", "Phoenix router", "core"], ["hq", "HQ data center", "sw"], ["bk", "Backup job", "sw", 1], ["us", "Office users", "cl"], ["vc", "Video calls", "cl"]],
+      links: [["rt", "hq", 1], ["bk", "rt"], ["us", "rt"], ["vc", "rt"]], cap: "The backup and Thursday's peak share one WAN uplink" },
+    "R-1044": { nodes: [["core", "Core", "core"]].concat(Array.from({ length: 12 }, (_, i) => [`s${i + 1}`, i === 0 ? "12 access switches" : i === 10 ? "Badge readers" : "", i >= 10 ? "badge" : "small", 1])).concat([["door", "Building A doors", "ext"]]),
+      links: Array.from({ length: 12 }, (_, i) => ["core", `s${i + 1}`]).concat([["s11", "door"], ["s12", "door"]]), cap: "Memory is climbing on all 12; two also carry the badge readers" },
+    "R-1045": { nodes: [["ws", "10.20.4.17", "ap", 1], ["sw", "Access switch", "sw"], ["dns", "DNS resolver", "sw"], ["fw", "Firewall", "core"], ["net", "Internet", "ext"], ["vend", "Backup vendor", "ext"]],
+      links: [["ws", "sw", 1], ["sw", "dns"], ["dns", "fw"], ["fw", "net"], ["net", "vend"]], cap: "250 DNS queries a minute leave one workstation" },
+    "R-1046": { nodes: [["sea", "Seattle router", "core"], ["h1", "Carrier hop 1", "small"], ["h2", "Carrier hop 2", "small"], ["h3", "Carrier hop 3", "small"], ["pdx", "Portland exchange", "sw"], ["hq", "HQ", "sw"]],
+      links: [["sea", "h1", 2], ["h1", "h2", 2], ["h2", "h3", 2], ["h3", "pdx", 2], ["pdx", "hq"]], cap: "Loss somewhere on the carrier path; not located yet" }
+  };
+  function topoStatus(r) {
+    const d = state.decisions[r.id];
+    if (!d) return "problem";
+    if ((d.type === "accepted" || d.type === "edited") && !d.rolledBack) return d.verified ? "fixed" : "applying";
+    if (d.type === "probe") return d.found ? "found" : "probing";
+    return "problem";
+  }
+  function drawTopo(el, r) {
+    el.innerHTML = "";
+    const T = TOPO[r.id]; if (!T) return;
+    const W = Math.max(280, Math.floor(el.getBoundingClientRect().width)), nar = W < 640, H = nar ? 560 : 440;
+    const R = { core: 26, sw: 20, ap: 18, cl: 20, ext: 18, small: 11, badge: 12 };
+    const nodes = T.nodes.map(([id, label, type, bad]) => ({ id, label, type, bad: !!bad }));
+    const links = T.links.map(([s, t, k]) => ({ source: s, target: t, kind: k || 0 }));
+    const sim = d3.forceSimulation(nodes)
+      .force("link", d3.forceLink(links).id((d) => d.id).distance((l) => (l.target.type === "small" || l.target.type === "badge" ? (W < 640 ? 85 : 120) : W < 640 ? 110 : 150)).strength(0.9))
+      .force("charge", d3.forceManyBody().strength(W < 640 ? -380 : -620))
+      .force("center", d3.forceCenter(W / 2, H / 2))
+      .force("x", d3.forceX(W / 2).strength(nar ? 0.35 : 0.06)).force("y", d3.forceY(H / 2).strength(nar ? 0.02 : 0.12))
+      .force("collide", d3.forceCollide((d) => R[d.type] + 26)).stop();
+    for (let i = 0; i < 320; i++) sim.tick();
+    const padX = nar ? 64 : 110, padT = 44, padB = 64;
+    const ex = d3.extent(nodes, (d) => d.x), ey = d3.extent(nodes, (d) => d.y);
+    const sc = Math.min((W - 2 * padX) / Math.max(1, ex[1] - ex[0]), (H - padT - padB) / Math.max(1, ey[1] - ey[0]), 2.2);
+    const ox = (W - (ex[1] - ex[0]) * sc) / 2, oy = padT + (H - padT - padB - (ey[1] - ey[0]) * sc) / 2;
+    nodes.forEach((d) => { d.x = ox + (d.x - ex[0]) * sc; d.y = oy + (d.y - ey[0]) * sc; });
+    const svg = d3.select(el).append("svg").attr("class", "viz").attr("width", W).attr("height", H).attr("role", "img").attr("aria-label", `Network map: ${T.cap}`);
+    const lk = svg.append("g").selectAll("line").data(links).join("line").attr("class", "link")
+      .attr("x1", (d) => d.source.x).attr("y1", (d) => d.source.y).attr("x2", (d) => d.target.x).attr("y2", (d) => d.target.y).style("opacity", MOTION() ? 0 : 1);
+    lk.transition().delay((d, i) => DUR(i * 60)).duration(DUR(600)).style("opacity", 1);
+    const pk = svg.append("g");
+    const packets = [];
+    links.forEach((l, i) => { for (let k = 0; k < 2; k++) packets.push({ l, off: (i * 0.37 + k * 0.5) % 1, el: pk.append("circle").attr("r", 7).attr("class", "pkt").attr("opacity", 0) }); });
+    const nd = svg.append("g").selectAll("g").data(nodes).join("g").attr("transform", (d) => `translate(${d.x},${d.y})`);
+    nd.append("circle").attr("class", "pulse").attr("r", (d) => R[d.type]).attr("fill", "none").attr("stroke", "var(--crit)").attr("stroke-width", 3).attr("display", "none");
+    const body = nd.append("circle").attr("r", 0).attr("fill", "var(--nm-base)").attr("stroke-width", (d) => (d.type === "small" || d.type === "badge" ? 3 : 4))
+      .attr("stroke-dasharray", (d) => (d.type === "ext" ? "5 4" : null));
+    body.transition().delay((d, i) => DUR(250 + i * 45)).duration(DUR(600)).ease(d3.easeBackOut.overshoot(2)).attr("r", (d) => R[d.type]);
+    nd.filter((d) => d.type === "core" || d.type === "sw").append("circle").attr("r", 6).attr("fill", "var(--accent)");
+    const cw = nar ? 10.3 : 11.6;
+    nd.filter((d) => d.label).append("text").attr("class", "node-lbl").attr("text-anchor", "middle").attr("y", (d) => R[d.type] + 24)
+      .attr("x", (d) => { const hw = (d.label.length * cw) / 2 + 4; return Math.min(Math.max(d.x, hw), W - hw) - d.x; }).text((d) => d.label);
+    let last = "";
+    const apply = () => {
+      const st = topoStatus(r); if (st === last) return; last = st;
+      const fixed = st === "fixed";
+      body.attr("stroke", (d) => (d.type === "ext" ? "var(--ink-3)" : d.type === "badge" ? "var(--ai)" : d.bad && !fixed ? "var(--crit)" : d.bad && fixed ? "var(--good)" : "var(--accent)"));
+      nd.select(".pulse").attr("display", (d) => (d.bad && !fixed && MOTION() ? null : "none"));
+      lk.attr("class", (d) => (d.kind === 1 && !fixed ? "link bad" : d.kind === 2 && st !== "found" ? "link bad" : d.kind === 2 && st === "found" && d.source.id === "h3" ? "link bad" : "link"))
+        .attr("stroke-opacity", (d) => (d.kind === 1 && fixed ? 0.15 : 1));
+      packets.forEach((p) => p.el.attr("class", p.l.kind && !fixed && !(p.l.kind === 2 && st === "found" && p.l.source.id !== "h3") ? "pkt bad" : "pkt"));
+    };
+    apply();
+    if (!MOTION()) return;
+    const t = d3.timer((ms) => {
+      if (!el.isConnected) { t.stop(); return; }
+      apply();
+      for (const p of packets) {
+        const slow = p.l.kind && last !== "fixed" ? 2600 : 1500;
+        const f = ((ms / slow) + p.off) % 1;
+        p.el.attr("cx", p.l.source.x + (p.l.target.x - p.l.source.x) * f).attr("cy", p.l.source.y + (p.l.target.y - p.l.source.y) * f).attr("opacity", ms < 900 ? 0 : Math.sin(f * Math.PI));
+      }
+    });
+    vizTimers.add(t);
+  }
+
+  // Live feed: 1-second samples streaming in; settles to the verified value after a fix
+  function drawLive(el, r) {
+    el.innerHTML = "";
+    const ev = r.evidence[0];
+    const base = num(ev.now), dec = String(ev.now).includes(".") ? 1 : 0, unit = ev.unit || "";
+    const isLoss = r.id === "R-1046";
+    const rnd = mulberry32(r.id.charCodeAt(4) * 97 + 13);
+    const amp = isLoss ? 0 : Math.max(base * 0.022, 0.15);
+    const target = () => {
+      const d = state.decisions[r.id];
+      if (d && (d.type === "accepted" || d.type === "edited") && d.verified && !d.rolledBack && r.outcome) return num(d.type === "edited" ? r.outcome.after2 : r.outcome.after);
+      if (isLoss && d && d.found) return 2.1;
+      return base;
+    };
+    const sample = (prev) => isLoss && !(state.decisions[r.id] && state.decisions[r.id].found) ? 0.8 + rnd() * 2.3 : prev + (target() - prev) * 0.28 + (rnd() - 0.5) * 2 * amp;
+    const N = 40, data = [];
+    let v = target();
+    for (let i = 0; i < N; i++) { v = sample(v); data.push(v); }
+    const head = document.createElement("div"); head.className = "viz-cap";
+    head.innerHTML = `<span class="live"><i></i>LIVE</span><span>1-second samples · simulated</span>`;
+    const nowEl = document.createElement("div"); nowEl.className = "now";
+    const box = document.createElement("div"); box.className = "viz-box";
+    el.append(head, nowEl, box);
+    const setNow = (x) => { nowEl.innerHTML = `${x.toFixed(dec)}${unit}<small>${esc(ev.label.split(",")[0].replace(/ on the.*| last.*/i, ""))}</small>`; };
+    setNow(data[N - 1]);
+    const W = Math.max(240, Math.floor(box.getBoundingClientRect().width || el.getBoundingClientRect().width - 32)), H = 190, mg = { t: 12, r: 8, b: 12, l: 8 };
+    const hi = Math.max(base, ev.baseline || 0, isLoss ? 3.2 : 0) * 1.3 || 1;
+    const x = d3.scaleLinear().domain([1, N - 2]).range([mg.l, W - mg.r]);
+    const y = d3.scaleLinear().domain([0, hi]).range([H - mg.b, mg.t]);
+    const svg = d3.select(box).append("svg").attr("class", "viz").attr("width", W).attr("height", H).attr("aria-hidden", "true");
+    const id = glowDefs(svg);
+    svg.select(`#${id}c rect`).attr("x", mg.l).attr("y", 0).attr("width", W - mg.l - mg.r).attr("height", H);
+    if (ev.baseline != null) svg.append("line").attr("x1", mg.l).attr("x2", W - mg.r).attr("y1", y(ev.baseline)).attr("y2", y(ev.baseline)).attr("stroke", "var(--ink-3)").attr("stroke-dasharray", "5 6").attr("stroke-width", 2);
+    const g = svg.append("g").attr("clip-path", `url(#${id}c)`);
+    const line = d3.line().x((d, i) => x(i)).y((d) => y(d)).curve(d3.curveBasis);
+    const area = d3.area().x((d, i) => x(i)).y0(H - mg.b).y1((d) => y(d)).curve(d3.curveBasis);
+    const ar = g.append("path").datum(data).attr("fill", `url(#${id}b)`).attr("d", area);
+    const ln = g.append("path").datum(data).attr("class", "glow-acc").attr("fill", "none").attr("stroke", "var(--accent)").attr("stroke-width", 3.5).attr("d", line);
+    const dot = svg.append("circle").attr("r", 7).attr("fill", "var(--accent)").attr("cx", x(N - 2)).attr("cy", y(data[N - 2]));
+    if (!MOTION()) return;
+    const tick = () => {
+      if (!el.isConnected) { clearInterval(iv); return; }
+      data.push(sample(data[data.length - 1]));
+      ln.attr("d", line).attr("transform", null).transition().duration(950).ease(d3.easeLinear).attr("transform", `translate(${x(0) - x(1)},0)`);
+      ar.attr("d", area).attr("transform", null).transition().duration(950).ease(d3.easeLinear).attr("transform", `translate(${x(0) - x(1)},0)`);
+      dot.transition().duration(950).ease(d3.easeLinear).attr("cy", y(data[N - 1]));
+      data.shift();
+      setNow(data[N - 1]);
+    };
+    const iv = setInterval(tick, 1000);
+    vizTimers.add(iv);
+  }
+
+  // Dashboard main chart: animated draw-in, morphs between metrics
+  function drawMainD3(now, before, m, from) {
+    const el = $("#main-chart");
+    const W = Math.max(300, Math.floor(el.getBoundingClientRect().width || 900)), narrow = W < 700;
+    const H = narrow ? 340 : 440, mg = { t: 24, r: 24, b: 58, l: W < 520 ? 84 : narrow ? 100 : 124 }, n = now.length;
+    const vals = now.concat(before).filter((v) => v != null);
+    const ticks = niceTicks(Math.max(...vals, m.kind === "rate" ? 10 : 1)), top = ticks[ticks.length - 1];
+    const x = d3.scaleLinear().domain([0, n - 1]).range([mg.l, W - mg.r]);
+    const y = d3.scaleLinear().domain([0, top]).range([H - mg.b, mg.t]);
+    const tickFmt = (t) => (m.kind === "rate" ? `${t}%` : m.kind === "time" ? dur(t) : t.toLocaleString());
+    const line = d3.line().defined((v) => v != null).x((v, i) => x(i)).y((v) => y(v)).curve(d3.curveMonotoneX);
+    const area = d3.area().defined((v) => v != null).x((v, i) => x(i)).y0(y(0)).y1((v) => y(v)).curve(d3.curveMonotoneX);
+    let svg = d3.select(el).select("svg.viz");
+    const fresh = svg.empty() || +svg.attr("data-n") !== n || +svg.attr("width") !== W;
+    if (fresh) {
+      el.innerHTML = "";
+      svg = d3.select(el).append("svg").attr("class", "viz").attr("width", W).attr("height", H).attr("tabindex", 0).attr("data-n", n).attr("role", "img");
+      const id = glowDefs(svg);
+      svg.append("g").attr("class", "grid gy");
+      svg.append("g").attr("class", "gx");
+      svg.append("path").attr("class", "before").attr("fill", "none").attr("stroke", "var(--ink-3)").attr("stroke-width", 2.5).attr("stroke-dasharray", "7 7");
+      svg.append("path").attr("class", "area").attr("fill", `url(#${id}b)`);
+      svg.append("path").attr("class", "now glow-acc").attr("fill", "none").attr("stroke", "var(--accent)").attr("stroke-width", 4).attr("stroke-linejoin", "round");
+      svg.append("line").attr("class", "xh").attr("y1", mg.t).attr("y2", H - mg.b).attr("stroke", "var(--ink-3)").attr("stroke-width", 1.5).attr("visibility", "hidden");
+      svg.append("circle").attr("class", "dot").attr("r", 8).attr("fill", "var(--accent)").attr("stroke", "var(--nm-base)").attr("stroke-width", 3).attr("visibility", "hidden");
+      svg.append("circle").attr("class", "end pulse").attr("r", 7).attr("fill", "var(--accent)");
+      svg.append("rect").attr("class", "hit").attr("x", mg.l).attr("y", mg.t).attr("width", W - mg.l - mg.r).attr("height", H - mg.t - mg.b).attr("fill", "transparent");
+      const tip = document.createElement("div"); tip.className = "tip"; tip.hidden = true; el.appendChild(tip);
+      const node = svg.node();
+      const show = (i) => {
+        const D = el.__d; if (!D) return;
+        svg.select(".xh").attr("x1", D.x(i)).attr("x2", D.x(i)).attr("visibility", "visible");
+        if (D.now[i] != null) svg.select(".dot").attr("cx", D.x(i)).attr("cy", D.y(D.now[i])).attr("visibility", "visible");
+        tip.textContent = `${fmtDay(D.from + i)}: ${D.m.fmt(D.now[i])} · period before ${D.m.fmt(D.before[i])}`;
+        placeTip(tip, el, D.x(i));
+      };
+      const hide = () => { tip.hidden = true; svg.select(".xh").attr("visibility", "hidden"); svg.select(".dot").attr("visibility", "hidden"); };
+      let ki = n - 1;
+      node.addEventListener("pointermove", (e) => { const r = node.getBoundingClientRect(); ki = Math.max(0, Math.min(n - 1, Math.round(el.__d.x.invert(e.clientX - r.left)))); show(ki); });
+      node.addEventListener("pointerleave", hide);
+      node.addEventListener("focus", () => show(ki)); node.addEventListener("blur", hide);
+      node.addEventListener("keydown", (e) => { if (e.key === "ArrowLeft") { ki = Math.max(0, ki - 1); show(ki); e.preventDefault(); } if (e.key === "ArrowRight") { ki = Math.min(n - 1, ki + 1); show(ki); e.preventDefault(); } });
+    }
+    el.__d = { now, before, m, from, x, y };
+    svg.attr("aria-label", `${m.label}, last ${n} days, now ${m.fmt(now[n - 1])}`);
+    const gy = svg.select(".gy").selectAll("g").data(ticks).join((en) => { const g = en.append("g"); g.append("line"); g.append("text"); return g; });
+    gy.select("line").attr("x1", mg.l).attr("x2", W - mg.r).transition().duration(DUR(600)).attr("y1", (t) => y(t)).attr("y2", (t) => y(t));
+    gy.select("text").attr("x", mg.l - 12).attr("text-anchor", "end").text(tickFmt).transition().duration(DUR(600)).attr("y", (t) => y(t) + 7);
+    const xt = []; const stepX = W < 520 ? n - 1 : Math.max(1, Math.round((n - 1) / (narrow ? 2 : 5)));
+    for (let i = 0; i < n; i += stepX) xt.push(i);
+    if (xt[xt.length - 1] !== n - 1 && n - 1 - xt[xt.length - 1] > stepX / 2) xt.push(n - 1); else xt[xt.length - 1] = n - 1;
+    svg.select(".gx").selectAll("text").data(xt).join("text").attr("x", (i) => x(i)).attr("y", H - 14)
+      .attr("text-anchor", (i) => (i === 0 ? "start" : i === n - 1 ? "end" : "middle")).text((i) => fmtDay(from + i));
+    const T = DUR(fresh ? 0 : 750);
+    svg.select(".before").transition().duration(T).attr("d", line(before));
+    svg.select(".area").transition().duration(T).attr("d", area(now));
+    const p = svg.select(".now"); p.transition().duration(T).attr("d", line(now));
+    const li = now.length - 1;
+    svg.select(".end").transition().duration(T).attr("cx", x(li)).attr("cy", now[li] == null ? -99 : y(now[li]));
+    if (fresh) { p.attr("d", line(now)); drawIn(p, 1400); svg.select(".before").attr("d", line(before)); drawIn(svg.select(".before"), 1400); svg.select(".area").attr("opacity", 0).attr("d", area(now)).transition().delay(DUR(600)).duration(DUR(700)).attr("opacity", 1); }
+  }
+
+  function drawDetailViz() {
+    if (!HAS_D3) return;
+    stopViz();
+    const r = recById(state.current);
+    const ev = $("#ev-chart"); if (ev) drawEvidence(ev, r.evidence[0], r);
+    const gb = $("#gauge-box"); if (gb && r.confidence != null) drawGauge(gb, Math.round(r.confidence * 100));
+    const tp = $("#topo"); if (tp) drawTopo(tp, r);
+    const lv = $("#live"); if (lv) drawLive(lv, r);
+  }
+
   // ---------- Tabs ----------
   const TABS = ["review", "learn", "spec"];
   function selectTab(name, focus) {
@@ -1448,6 +1954,7 @@ html[data-motion="off"]::view-transition-old(root), html[data-motion="off"]::vie
       if (on && focus) tab.focus();
     });
     if (name === "learn") { renderDash(); renderExamples(); renderEvents(); }
+    if (name === "review") requestAnimationFrame(drawDetailViz);
     window.scrollTo({ top: 0 });
   }
   TABS.forEach((t, i) => {
@@ -1468,7 +1975,7 @@ html[data-motion="off"]::view-transition-old(root), html[data-motion="off"]::vie
   });
   $("#view-learn").querySelectorAll(".seg button").forEach((b) => b.addEventListener("click", () => { state.range = +b.dataset.range; renderDash(); }));
   let rz;
-  window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { if (!$("#view-learn").hidden) renderDash(); }, 150); });
+  window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { if (!$("#view-learn").hidden) renderDash(); if (!$("#view-review").hidden) drawDetailViz(); }, 200); });
 
   $("#queue").addEventListener("click", (e) => {
     const b = e.target.closest(".qitem");
