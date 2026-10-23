@@ -487,9 +487,9 @@ html[data-motion="off"]::view-transition-old(root), html[data-motion="off"]::vie
 @media (prefers-reduced-motion: reduce) { body::before { animation: none; } }
 </style>
 <style id="ops">
-/* Ops layer (2026–27): network-operations glass UI. Text at 1x (root 16px), grid backdrop with a slow scan line, glowing data,
+/* Ops layer (2026–27): network-operations glass UI. Text at root 18px, grid backdrop with a slow scan line, glowing data,
    mono numerics, live status. Layout reflows earlier so the larger text never gets cramped. */
-html { font-size: 16px; }
+html { font-size: 18px; }
 body { font-size: 1rem !important; line-height: 1.45; }
 :root {
   --nm-base: #e9eff4; --nm-well: #dde5ec; --grid: rgba(31,79,154,.075); --scan: rgba(42,120,214,.10);
