@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow, noarchive, noai, noimageai">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2040%2040%22%3E%3Crect%20width%3D%2240%22%20height%3D%2240%22%20rx%3D%229%22%20fill%3D%22%23161513%22/%3E%3Cpath%20d%3D%22M20%209%2029.5%2014.5v11L20%2031l-9.5-5.5v-11z%22%20fill%3D%22none%22%20stroke%3D%22%23c74634%22%20stroke-width%3D%222%22/%3E%3Cpath%20d%3D%22M20%209v22M10.5%2014.5l19%2011M29.5%2014.5l-19%2011%22%20stroke%3D%22%23c74634%22%20stroke-width%3D%221.4%22%20opacity%3D%22.5%22/%3E%3Cg%20fill%3D%22%23fff%22%3E%3Ccircle%20cx%3D%2220%22%20cy%3D%229%22%20r%3D%222.4%22/%3E%3Ccircle%20cx%3D%2229.5%22%20cy%3D%2214.5%22%20r%3D%222.4%22/%3E%3Ccircle%20cx%3D%2229.5%22%20cy%3D%2225.5%22%20r%3D%222.4%22/%3E%3Ccircle%20cx%3D%2220%22%20cy%3D%2231%22%20r%3D%222.4%22/%3E%3Ccircle%20cx%3D%2210.5%22%20cy%3D%2225.5%22%20r%3D%222.4%22/%3E%3Ccircle%20cx%3D%2210.5%22%20cy%3D%2214.5%22%20r%3D%222.4%22/%3E%3Ccircle%20cx%3D%2220%22%20cy%3D%2220%22%20r%3D%223%22%20fill%3D%22%23c74634%22/%3E%3C/g%3E%3C/svg%3E">
 <title>Network Fix Review</title>
 <meta name="description" content="A working prototype: AI recommendations for network operations that an operator can question, correct and teach. Portfolio rebuild of shipped client work by Elizabeth Hannan.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -515,6 +516,8 @@ html[data-motion="off"] body::after { animation: none; background-position: 0 -4
 .wrap { max-width: 1840px !important; }
 .mono, .kpi .val, .meter .big, .dmeta .mono, .rrow .v, .rrow .sh, .bn, td.num { font-family: var(--font-mono) !important; font-variant-numeric: tabular-nums; }
 .brand h1 { font-size: 1.5rem !important; letter-spacing: -.01em; }
+.brand h1 .h1-logo { order: -1; flex: none; width: 1.15em; height: 1.15em; vertical-align: -.2em; margin-right: .4em; border-radius: .22em; }
+.brand h1 { display: flex; align-items: center; }
 .brand h1::before { content: ""; display: inline-block; width: .42em; height: .42em; border-radius: 50%; background: var(--accent); margin-right: .35em; vertical-align: .12em; box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 60%, transparent); animation: beacon 2.4s ease-out infinite; }
 @keyframes beacon { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 60%, transparent); } 100% { box-shadow: 0 0 0 .6em transparent; } }
 .tag, .m-toggle { white-space: normal; font-size: .8125rem !important; }
@@ -802,7 +805,7 @@ body { padding-bottom: 72px; }
 <header class="top">
   <div class="wrap">
     <div class="brand">
-      <h1>Network Fix Review</h1>
+      <h1><svg class="h1-logo" viewBox="0 0 40 40" aria-hidden="true" focusable="false"><rect width="40" height="40" rx="9" fill="#161513"/><path d="M20 9 29.5 14.5v11L20 31l-9.5-5.5v-11z" fill="none" stroke="#c74634" stroke-width="2"/><path d="M20 9v22M10.5 14.5l19 11M29.5 14.5l-19 11" stroke="#c74634" stroke-width="1.4" opacity=".5"/><g fill="#fff"><circle cx="20" cy="9" r="2.4"/><circle cx="29.5" cy="14.5" r="2.4"/><circle cx="29.5" cy="25.5" r="2.4"/><circle cx="20" cy="31" r="2.4"/><circle cx="10.5" cy="25.5" r="2.4"/><circle cx="10.5" cy="14.5" r="2.4"/><circle cx="20" cy="20" r="3" fill="#c74634"/></g></svg>Network Fix Review</h1>
       <p>AI recommendations an operator can question, correct and teach</p>
     </div>
     <div class="tags">
@@ -813,7 +816,7 @@ body { padding-bottom: 72px; }
   </div>
 </header>
 <div class="clientband" role="note" aria-label="About the client">
-  <div class="cb"><svg viewBox="0 0 40 40" role="img" aria-label="Client mark"><rect width="40" height="40" rx="9" fill="#1d2f5c"/><path d="M20 9 29.5 14.5v11L20 31l-9.5-5.5v-11z" fill="none" stroke="#5fc4b8" stroke-width="2"/><path d="M20 9v22M10.5 14.5l19 11M29.5 14.5l-19 11" stroke="#5fc4b8" stroke-width="1.4" opacity=".5"/><g fill="#fff"><circle cx="20" cy="9" r="2.4"/><circle cx="29.5" cy="14.5" r="2.4"/><circle cx="29.5" cy="25.5" r="2.4"/><circle cx="20" cy="31" r="2.4"/><circle cx="10.5" cy="25.5" r="2.4"/><circle cx="10.5" cy="14.5" r="2.4"/><circle cx="20" cy="20" r="3" fill="#5fc4b8"/></g></svg><div class="who"><b>Client</b><span>International enterprise cloud, database and network infrastructure software company</span></div><p class="nda" style="margin-block:0">Portfolio rebuild of shipped client work. Client, data and details changed under NDA. Case scenario data altered from client to protect NDA commitments.</p></div>
+  <div class="cb"><svg viewBox="0 0 40 40" role="img" aria-label="Client mark"><rect width="40" height="40" rx="9" fill="#161513"/><path d="M20 9 29.5 14.5v11L20 31l-9.5-5.5v-11z" fill="none" stroke="#c74634" stroke-width="2"/><path d="M20 9v22M10.5 14.5l19 11M29.5 14.5l-19 11" stroke="#c74634" stroke-width="1.4" opacity=".5"/><g fill="#fff"><circle cx="20" cy="9" r="2.4"/><circle cx="29.5" cy="14.5" r="2.4"/><circle cx="29.5" cy="25.5" r="2.4"/><circle cx="20" cy="31" r="2.4"/><circle cx="10.5" cy="25.5" r="2.4"/><circle cx="10.5" cy="14.5" r="2.4"/><circle cx="20" cy="20" r="3" fill="#c74634"/></g></svg><div class="who"><b>Client</b><span>International enterprise cloud, database and network infrastructure software company</span></div><p class="nda" style="margin-block:0">Portfolio rebuild of shipped client work. Client, data and details changed under NDA. Case scenario data altered from client to protect NDA commitments.</p></div>
 </div>
 
 <div class="tabbar">
