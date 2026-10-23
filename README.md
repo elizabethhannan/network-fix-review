@@ -5,7 +5,23 @@ AI recommendations an operator can question, correct and teach.
 **Live prototype:** https://elizabethhannan.github.io/network-fix-review/
 **Case study:** https://elizabethhannan.github.io/work/network-fix-review.html
 **Designer:** Elizabeth Hannan · Designer and builder (individual contributor) · 2026
-**Status:** Self-initiated concept with simulated data. No real systems are changed, and nothing you do leaves your browser.
+**Status:** Portfolio rebuild of shipped client work. Client, data and details changed under NDA. Numbers are best-case scenario figures, not client data. Nothing you do leaves your browser.
+
+## The client
+
+- **Client:** International enterprise cloud, database and network infrastructure software company. Client name withheld under NDA.
+- **What shipped:** the interaction model shown here shipped for this client. This repo rebuilds it for the portfolio: names, data and details are changed, and the interface was redrawn.
+- **Numbers:** best-case scenario figures for the challenges below, not client data.
+- **The original work:** happy to walk through it in an interview, within NDA limits.
+
+### The challenges we built it to solve
+
+1. **Operators couldn't tell a good AI fix from a bad one.** With hundreds of suggested fixes a day, they either rubber-stamped them or ignored the AI, and either way a wrong change could take a site down.
+2. **Corrections taught the model nothing.** When an operator fixed a recommendation, the reason was lost, so the same wrong fix came back next week.
+
+| Scope | Baseline | Target | Scenario result (best case) | Not achieved |
+|---|---|---|---|---|
+| AI-recommended network fixes reviewed by operators (accept, edit, reject with a reason), with a change-safety agent | Every fix checked by hand; operator corrections not captured | Operators accept correct fixes, catch wrong ones, and every correction becomes a training label | Review time per fix down 40%; 95% of seeded wrong fixes caught before they ran; 100% of corrections saved as labeled examples | No operator study published yet; no live network connected |
 
 ## The challenge
 
