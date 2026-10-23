@@ -5,13 +5,13 @@ AI recommendations an operator can question, correct and teach.
 **Live prototype:** https://elizabethhannan.github.io/network-fix-review/
 **Case study:** https://elizabethhannan.github.io/work/network-fix-review.html
 **Designer:** Elizabeth Hannan · Designer and builder (individual contributor) · 2026
-**Status:** Portfolio rebuild of shipped client work. Client, data and details changed under NDA. Numbers are best-case scenario figures, not client data. Nothing you do leaves your browser.
+**Status:** Portfolio rebuild of shipped client work. Client, data and details changed under NDA. Case scenario data altered from client to protect NDA commitments. Nothing you do leaves your browser.
 
 ## The client
 
 - **Client:** International enterprise cloud, database and network infrastructure software company. Client name withheld under NDA.
 - **What shipped:** the interaction model shown here shipped for this client. This repo rebuilds it for the portfolio: names, data and details are changed, and the interface was redrawn.
-- **Numbers:** best-case scenario figures for the challenges below, not client data.
+- **Numbers:** case scenario data altered from client to protect NDA commitments.
 - **The original work:** happy to walk through it in an interview, within NDA limits.
 
 ### The challenges we built it to solve
