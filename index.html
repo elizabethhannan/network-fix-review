@@ -131,7 +131,7 @@ main { padding-block: 20px 48px; }
 .a2a .verdict.disagree { color: #9c2b2b; }
 .a2a ul { margin: 6px 0 0; padding-left: 18px; font-size: 0.875rem; color: var(--ink-2); }
 .a2a .rule { margin: 8px 0 0; font-size: 0.8125rem; color: var(--ink-3); }
-.pill.agents { background: #f6e3e3; color: #9c2b2b; }
+.pill.agents { background: var(--crit-soft); color: var(--crit); }
 @media (max-width: 640px) { .a2a .flow { grid-template-columns: 1fr; } .a2a .hand { transform: rotate(90deg); } }
 .says { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start; background: var(--ai-soft); border-radius: var(--radius); padding: 14px 16px; }
 .says .who { font-weight: 700; color: var(--ai); font-size: 0.875rem; white-space: nowrap; display: inline-flex; gap: 6px; align-items: center; }
@@ -522,6 +522,8 @@ html[data-motion="off"] body::after { animation: none; background-position: 0 -4
 .m-toggle .knob { width: 1.6em; height: .95em; }
 .m-toggle .knob::after { width: .7em; height: .7em; }
 .m-toggle[aria-pressed="true"] .knob::after { transform: translateX(.65em); }
+.t-toggle { padding: 4px 14px 4px 10px; }
+.t-toggle svg { width: 1.1em; height: 1.1em; color: var(--ai); }
 .live { display: inline-flex; align-items: center; gap: .4em; font-size: .8125rem; font-weight: 700; color: var(--accent); font-family: var(--font-mono); }
 .live i { width: .5em; height: .5em; border-radius: 50%; background: currentColor; animation: blink 1.4s ease-in-out infinite; }
 @keyframes blink { 50% { opacity: .25; } }
@@ -2652,6 +2654,21 @@ body { padding-bottom: 72px; }
   tgl.addEventListener("click", () => { root.dataset.motion = on() ? "off" : "on"; try { localStorage.setItem("motion", root.dataset.motion); } catch (e) {} sync(); if (on()) reveal(true); });
   sync();
   (document.querySelector(".top .tags") || document.querySelector(".top .wrap") || document.body).appendChild(tgl);
+
+  // Light / dark background switch, top right beside Motion
+  const dm = matchMedia("(prefers-color-scheme: dark)");
+  let tpref = null; try { tpref = localStorage.getItem("theme"); } catch (e) {}
+  if (tpref === "light" || tpref === "dark") root.dataset.theme = tpref;
+  const isDark = () => root.dataset.theme ? root.dataset.theme === "dark" : dm.matches;
+  const th = document.createElement("button");
+  th.type = "button"; th.className = "m-toggle t-toggle";
+  const SUN = '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="3.2" fill="currentColor"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.4 1.4M11.6 11.6L13 13M3 13l1.4-1.4M11.6 4.4L13 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
+  const MOON = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13.5 10.2A5.8 5.8 0 0 1 5.8 2.5a5.8 5.8 0 1 0 7.7 7.7z" fill="currentColor"/></svg>';
+  const tsync = () => { const d = isDark(); th.innerHTML = (d ? SUN : MOON) + `<span>${d ? "Light" : "Dark"}</span>`; th.setAttribute("aria-label", d ? "Switch to light background" : "Switch to dark background"); th.title = th.getAttribute("aria-label"); };
+  th.addEventListener("click", () => { root.dataset.theme = isDark() ? "light" : "dark"; try { localStorage.setItem("theme", root.dataset.theme); } catch (e) {} tsync(); window.dispatchEvent(new Event("resize")); });
+  dm.addEventListener && dm.addEventListener("change", () => { if (!root.dataset.theme) tsync(); });
+  tsync();
+  tgl.after(th);
 
   // Staged entrance + scroll reveal
   const SURF = ".card, .panel, .block, .cmdbar, .controls, .kpi-card, .queue, .detail, .a2a, .canvaswrap, .chips, .kpis, .about section";
